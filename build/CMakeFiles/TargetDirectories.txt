@@ -1,0 +1,3 @@
+/home/matheusriv/Documentos/comp_grafica/raym/build/CMakeFiles/raytmath.dir
+/home/matheusriv/Documentos/comp_grafica/raym/build/CMakeFiles/edit_cache.dir
+/home/matheusriv/Documentos/comp_grafica/raym/build/CMakeFiles/rebuild_cache.dir
