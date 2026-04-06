@@ -1,0 +1,12 @@
+# Pastas de compilação
+build/
+
+# Arquivos objeto e executáveis
+*.o
+raytmath
+
+# Imagens e logs de resultados
+results/
+*.ppm
+*.png
+ray_debug.txt
