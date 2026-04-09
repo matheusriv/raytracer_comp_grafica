@@ -1,12 +1,9 @@
 # Pastas de compilação
 build/
 
+# Imagens e logs de resultados
+results/
+
 # Arquivos objeto e executáveis
 *.o
 raytmath
-
-# Imagens e logs de resultados
-results/
-*.ppm
-*.png
-ray_debug.txt
