@@ -58,11 +58,12 @@ std::string handles_filename(const ParamSet& ps) {
 
   // Caso contrário, recupera do arquivo de cena (XML)
   std::string filename = ps.retrieve<std::string>("filename", "output");
-  //std::string img_type = ps.retrieve<std::string>("img_type", "png");
+  std::string img_type = ps.retrieve<std::string>("img_type", "png");
+
   // Se o nome do arquivo não tiver extensão, adicionamos a extensão apropriada
-  //if (filename.find('.') == std::string::npos) {
-  //  filename += (img_type == "png") ? ".png" : ".ppm";
-  //}
+  if (filename.find('.') == std::string::npos) {
+    filename += (img_type == "png") ? ".png" : ".ppm";
+  }
 
   // Se for apenas um nome de arquivo simples (sem caminhos de diretório indicados), 
   // salvamos por padrão no diretório results/
@@ -80,7 +81,9 @@ std::string handles_filename(const ParamSet& ps) {
 
 /// Parses the dimensions of the film from the ParamSet.
 ryt::Point2i handles_dimensions(const ParamSet& ps) {
-  Point2i film_dimension{ ps.retrieve<int>("w_res", 1280), ps.retrieve<int>("h_res", 720) };
+  int width = ps.retrieve<int>("w_res", ps.retrieve<int>("x_res", 1280));
+  int height = ps.retrieve<int>("h_res", ps.retrieve<int>("y_res", 720));
+  Point2i film_dimension{ width, height };
   if (App::m_current_run_options.quick_render) {
     // decrease resolution.
     film_dimension.x = std::max(1, film_dimension.x / 4);

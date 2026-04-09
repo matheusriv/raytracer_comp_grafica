@@ -134,8 +134,8 @@ Camera* App::make_camera(const ParamSet& camera_ps, const ParamSet& film_ps) {
             << "    - type: " << film_ps.retrieve<std::string>("type", "") << "\n"
             << "    - filename: " << film_ps.retrieve<std::string>("filename", "output") << "\n"
             << "    - img_type: " << film_ps.retrieve<std::string>("img_type", "png") << "\n"
-            << "    - w_res: " << film_ps.retrieve<int>("w_res", 1280) << "\n"
-            << "    - h_res: " << film_ps.retrieve<int>("h_res", 720) << "\n\n";
+            << "    - w_res/x_res: " << film_ps.retrieve<int>("w_res", film_ps.retrieve<int>("x_res", 1280)) << "\n"
+            << "    - h_res/y_res: " << film_ps.retrieve<int>("h_res", film_ps.retrieve<int>("y_res", 720)) << "\n\n";
   }
 
   return create_camera(std::move(film), camera_ps, m_render_options->actors["lookat"]);

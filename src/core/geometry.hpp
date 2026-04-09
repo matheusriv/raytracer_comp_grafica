@@ -398,25 +398,26 @@ T abs_dot(const Vector3<T>& v1, const Vector3<T>& v2) {
 template <typename T>
 Vector3<T> cross(const Vector3<T>& v1, const Vector3<T>& v2) {
   assert(not v1.has_nans() and not v2.has_nans());
-  return { (v1.y * v2.z) - (v1.z * v2.y),
-           (v1.z * v2.x) - (v1.x * v2.z),
-           (v1.x * v2.y) - (v1.y * v2.x) };
+  return { (v1.z * v2.y) - (v1.y * v2.z),
+           (v1.x * v2.z) - (v1.z * v2.x),
+           (v1.y * v2.x) - (v1.x * v2.y) };
 }
+
 
 template <typename T>
 Vector3<T> cross(const Vector3<T>& v1, const Normal3<T>& v2) {
   assert(not v1.has_nans() and not v2.has_nans());
-  return { (v1.y * v2.z) - (v1.z * v2.y),
-           (v1.z * v2.x) - (v1.x * v2.z),
-           (v1.x * v2.y) - (v1.y * v2.x) };
+  return { (v1.z * v2.y) - (v1.y * v2.z),
+           (v1.x * v2.z) - (v1.z * v2.x),
+           (v1.y * v2.x) - (v1.x * v2.y) };
 }
 
 template <typename T>
 Vector3<T> cross(const Normal3<T>& v1, const Vector3<T>& v2) {
   assert(not v1.has_nans() and not v2.has_nans());
-  return { (v1.y * v2.z) - (v1.z * v2.y),
-           (v1.z * v2.x) - (v1.x * v2.z),
-           (v1.x * v2.y) - (v1.y * v2.x) };
+  return { (v1.z * v2.y) - (v1.y * v2.z),
+           (v1.x * v2.z) - (v1.z * v2.x),
+           (v1.y * v2.x) - (v1.x * v2.y) };
 }
 
 template <typename T>

@@ -1,7 +1,7 @@
 <RT3>
     <lookat look_from="0 0 -7" look_at="0 0 0" up="0 1 0" />
     <camera type="orthographic" screen_window="-5.3 5.3 -4 4"/>
-    <film type="image" w_res="200" h_res="100" filename="perspective_test" img_type="ppm" />
+    <film type="image" w_res="200" h_res="100" filename="perspective_test" img_type="png" />
     <world_begin/>
         <background type="4_colors" bl="0 0 51" tl="0 155 100" tr="255 255 51" br="60 100 200" />
     <world_end/>
