@@ -28,6 +28,6 @@ make
 Após compilar com sucesso, o executável `raytmath` será gerado. Para iniciar a leitura e renderização, passe o caminho do arquivo de cena `.xml` desejado como argumento, por exemplo:
 
 ```bash
-./raytmath ../perspective_test.xml
+./raytmath ../xml_files/interpolation.xml
 ```
 *As imagens geradas serão salvas por padrão na pasta `results/`.*

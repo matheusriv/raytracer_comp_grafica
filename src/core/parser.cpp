@@ -192,6 +192,27 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     "world_end",
     { "" },  // no attributes
   },
+  {
+    "material",
+    {
+      "type",
+      "color",
+    },
+  },
+  {
+    "object",
+    {
+      "type",
+      "radius",
+      "center",
+    },
+  },
+  {
+    "integrator",
+    {
+      "type"
+    },
+  },
 };
 
 
@@ -203,6 +224,9 @@ std::unordered_map<std::string, std::function<void(const ryt::ParamSet&)>> api_f
   { "world_begin", ryt::App::world_begin },
   { "world_end", ryt::App::world_end },
   { "film", ryt::App::film },
+  { "material", ryt::App::material },
+  { "integrator", ryt::App::integrator },
+  { "object", ryt::App::object },
 };
 
 
@@ -234,6 +258,9 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "look_from", convert<ryt::Point3f, 3> },
   { "look_at", convert<ryt::Point3f, 3> },
   { "up", convert<ryt::Vector3f, 3> },
+  // Object attributes
+  { "radius", convert<ryt::real_type> },
+  { "center", convert<ryt::Point3f, 3> },
 };
 
 
@@ -342,10 +369,13 @@ void parse_scene_file(const char* filename) {
         WARNING(oss.str());
         continue;  // Skip to the next attribute inside this tag.
       }
-      // Parse the string version of this attribute into its expected value.
-      // The result is stored inside the ryt::ParamSet object, passed in as the last argument.
+      // Material "color" uses float 0-1 Spectrum, not integer RGBColor.
       std::string attribute_value{ ryt::str_to_lower(attr->Value()) };
-      parse_attribute(attribute_name, attribute_value, /*OUT value*/ &ps);
+      if (tag_name == "material" && attribute_name == "color") {
+        convert<ryt::Spectrum, 3>(attribute_name, attribute_value, &ps);
+      } else {
+        parse_attribute(attribute_name, attribute_value, &ps);
+      }
     }
 
     // ================================================================================

@@ -14,9 +14,9 @@ Camera::Camera(std::unique_ptr<Film> film, const ParamSet& camera_ps, const Para
 
   // Compute camera frame
   Vector3f gaze = look_at - look_from;
-  m_w = normalize(gaze);  // note: left-hand rule
-  m_u = normalize(cross(up, m_w));
-  m_v = normalize(cross(m_w, m_u));
+  m_w = normalize(gaze);
+  m_u = normalize(cross(m_w, up));  // left-hand rule
+  m_v = normalize(cross(m_u, m_w));
   m_eye = look_from;
 
   // Get screen window
@@ -53,7 +53,7 @@ Rayf PerspectiveCamera::generate_ray(int x, int y) const {
   real_type nx = res.x;
   real_type ny = res.y;
   real_type u = m_l + (m_r - m_l) * (x + 0.5f) / nx;
-  real_type v = m_b + (m_t - m_b) * (y + 0.5f) / ny;
+  real_type v = m_t - (m_t - m_b) * (y + 0.5f) / ny;
 
   // Generate ray
   Vector3f direction = u * m_u + v * m_v + m_w;  // focal distance = 1
@@ -66,7 +66,7 @@ Rayf OrthographicCamera::generate_ray(int x, int y) const {
   real_type nx = res.x;
   real_type ny = res.y;
   real_type u = m_l + (m_r - m_l) * (x + 0.5f) / nx;
-  real_type v = m_b + (m_t - m_b) * (y + 0.5f) / ny;
+  real_type v = m_t - (m_t - m_b) * (y + 0.5f) / ny;
 
   // Generate ray
   Point3f origin = m_eye + u * m_u + v * m_v;

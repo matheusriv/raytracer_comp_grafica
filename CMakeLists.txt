@@ -13,6 +13,7 @@ set(SOURCES
     src/core/film.cpp
     src/core/image_io.cpp
     src/core/parser.cpp
+    src/core/sphere.cpp
     msg_system/error.cpp
     lib_tinyxml2/tinyxml2.cpp
 )

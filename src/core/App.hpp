@@ -4,10 +4,13 @@
 #include <cstdint>
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "common.hpp"
 #include "paramset.hpp"
 #include "background.hpp"
+#include "material.hpp"
+#include "primitive.hpp"
 #include "scene.hpp"
 #include "integrator.hpp"
 
@@ -30,6 +33,10 @@ struct RenderOptions {
   std::unique_ptr<Scene> scene;
   /// Integrator object
   std::unique_ptr<Integrator> integrator;
+  /// List of primitives (objects) in the scene.
+  std::vector<std::shared_ptr<Primitive>> primitives;
+  /// The most recently defined material (applied to subsequent objects).
+  std::shared_ptr<Material> current_material;
 };
 
 /*!
@@ -94,6 +101,8 @@ public:
   static void look_at(const ParamSet& ps);
   static void background(const ParamSet& ps);
   static void material(const ParamSet& ps);
+  static void integrator(const ParamSet& ps);
+  static void object(const ParamSet& ps);
   static void world_begin(const ParamSet& ps);
   static void world_end(const ParamSet& ps);
   static void film(const ParamSet& ps);

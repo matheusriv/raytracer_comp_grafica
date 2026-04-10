@@ -51,19 +51,26 @@ void Film::write_image() const {
 
 /// Chooses the filename based on the CLI and scene file info.
 std::string handles_filename(const ParamSet& ps) {
+  std::string filename;
   // Se o usuário forneceu um arquivo de saída via CLI, ele tem prioridade.
   if (!App::m_current_run_options.outfile.empty()) {
-    return App::m_current_run_options.outfile;
+    filename = App::m_current_run_options.outfile;
+  } else {
+    // Caso contrário, recupera do arquivo de cena (XML)
+    filename = ps.retrieve<std::string>("filename", "output");
   }
 
-  // Caso contrário, recupera do arquivo de cena (XML)
-  std::string filename = ps.retrieve<std::string>("filename", "output");
   std::string img_type = ps.retrieve<std::string>("img_type", "png");
 
-  // Se o nome do arquivo não tiver extensão, adicionamos a extensão apropriada
-  if (filename.find('.') == std::string::npos) {
-    filename += (img_type == "png") ? ".png" : ".ppm";
+  // Se o nome do arquivo já possuir extensão, removemos para pegar apenas o nome
+  size_t last_dot = filename.find_last_of('.');
+  size_t last_slash = filename.find_last_of("/\\");
+  if (last_dot != std::string::npos && (last_slash == std::string::npos || last_dot > last_slash)) {
+    filename = filename.substr(0, last_dot);
   }
+  
+  // Adicionamos a extensão apropriada com base no tipo de imagem solicitado
+  filename += (img_type == "png") ? ".png" : ".ppm";
 
   // Se for apenas um nome de arquivo simples (sem caminhos de diretório indicados), 
   // salvamos por padrão no diretório results/

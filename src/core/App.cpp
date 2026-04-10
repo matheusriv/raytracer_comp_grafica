@@ -13,6 +13,9 @@
 #include "camera.hpp"
 #include "film.hpp"
 #include "background.hpp"
+#include "material.hpp"
+#include "primitive.hpp"
+#include "sphere.hpp"
 #include "paramset.hpp"
 #include "parser.hpp"
 #include "scene.hpp"
@@ -111,6 +114,31 @@ void App::background(const ParamSet& ps) {
   m_render_options->background.reset(bkg);
 }
 
+void App::material(const ParamSet& ps) {
+  check_in_world_block_state("App::material()");
+  auto type = ps.retrieve<std::string>("type", "flat");
+  if (type == "flat") {
+    auto color = ps.retrieve<Spectrum>("color", Spectrum{ 1.0f, 0.0f, 0.0f });
+    m_render_options->current_material = std::make_shared<FlatMaterial>(color);
+  }
+}
+
+void App::integrator(const ParamSet& ps) {
+  if (not check_in_setup_block_state("App::integrator()")) {
+    return;
+  }
+  m_render_options->actors["integrator"] = ps;
+}
+
+void App::object(const ParamSet& ps) {
+  check_in_world_block_state("App::object()");
+  auto type = ps.retrieve<std::string>("type", "");
+  if (type == "sphere") {
+    Sphere* sph = create_sphere(ps, m_render_options->current_material);
+    m_render_options->primitives.push_back(std::shared_ptr<Primitive>(sph));
+  }
+}
+
 void App::world_begin(const ParamSet& ps) {
   check_in_setup_block_state("App::world_begin()");
   m_current_block_state = AppState::WorldBlock;  // correct machine state.
@@ -185,10 +213,13 @@ void App::world_end(const ParamSet& ps) {
 
   // The scene has already been parsed and properly set up. It's time to render the scene.
   
-  // Create scene
-  m_render_options->scene = std::make_unique<Scene>(std::move(m_render_options->background));
+  // Create scene (with background and all collected primitives)
+  m_render_options->scene = std::make_unique<Scene>(
+      std::move(m_render_options->background),
+      std::move(m_render_options->primitives));
   // Create integrator
-  m_render_options->integrator = std::make_unique<Integrator>();
+  m_render_options->integrator = std::unique_ptr<Integrator>(
+      create_integrator(m_render_options->actors["integrator"]));
 
   bool scene_and_integrator_ok = m_render_options->scene && m_render_options->integrator;
 
@@ -210,7 +241,7 @@ void App::world_end(const ParamSet& ps) {
     MESSAGE("    Time elapsed: " + std::to_string(diff_sec.count()) + " seconds ("
             + std::to_string(std::chrono::duration<double, std::milli>(diff).count()) + " ms) \n");
   }
-  // [4] Basic clean up, preparing for new rendering, in case we have
+  // Basic clean up, preparing for new rendering, in case we have
   // several scene setup + world in a single input scene file.
   m_current_block_state = AppState::SetupBlock;  // correct machine state.
 }
