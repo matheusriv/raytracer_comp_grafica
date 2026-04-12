@@ -10,17 +10,17 @@ namespace ryt {
 class Material {
 public:
   virtual ~Material() = default;
-  virtual Spectrum color() const = 0;
+  virtual RGBColor color() const = 0;
 };
 
 /// Flat (unlit) material that returns a constant color regardless of lighting.
 class FlatMaterial : public Material {
 public:
-  explicit FlatMaterial(const Spectrum& c) : m_color{ c } {}
-  Spectrum color() const override { return m_color; }
+  explicit FlatMaterial(const RGBColor& c) : m_color{ c } {}
+  RGBColor color() const override { return m_color; }
 
 private:
-  Spectrum m_color;
+  RGBColor m_color;
 };
 
 }  // namespace ryt

@@ -17,8 +17,7 @@ class Vector3;
 using real_type = float;
 using size_type = size_t;
 using byte = std::uint8_t;
-using RGBColor = Vector3<int>;
-using Spectrum = Vector3<real_type>;
+using RGBColor = Vector3<real_type>;
 
 // Add here Option structure.
 struct RunningOptions {

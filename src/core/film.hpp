@@ -29,7 +29,7 @@ public:
   [[nodiscard]] Point2i get_resolution() const { return m_full_resolution; };
 
   /// Takes a sample `p` and its radiance `L` and updates the image.
-  void add_sample(const Point2i&, const Spectrum&);
+  void add_sample(const Point2i&, const RGBColor&);
 
   /// Write image to file.
   void write_image() const;
@@ -42,7 +42,7 @@ public:
   image_type_e m_image_type;         //!< Image type, PNG, PPM3, PPM6.
 
   // Color buffer
-  std::vector<Spectrum> m_pixels;
+  std::vector<RGBColor> m_pixels;
 };
 
 /// Factory creation

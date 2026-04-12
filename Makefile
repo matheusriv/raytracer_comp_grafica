@@ -3,6 +3,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -O3
 
 SRCS = src/core/main.cpp \
        src/core/App.cpp \
+       src/core/integrator.cpp \
        src/core/background.cpp \
        src/core/camera.cpp \
        src/core/film.cpp \

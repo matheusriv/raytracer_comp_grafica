@@ -9,8 +9,8 @@
 
 namespace ryt {
 
-void write_ppm(const std::string& filename, const std::vector<Spectrum>& pixels, int w, int h, bool ascii = false);
-void write_png(const std::string& filename, const std::vector<Spectrum>& pixels, int w, int h);
+void write_ppm(const std::string& filename, const std::vector<RGBColor>& pixels, int w, int h, bool ascii = false);
+void write_png(const std::string& filename, const std::vector<RGBColor>& pixels, int w, int h);
 
 } // namespace ryt
 

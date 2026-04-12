@@ -369,13 +369,8 @@ void parse_scene_file(const char* filename) {
         WARNING(oss.str());
         continue;  // Skip to the next attribute inside this tag.
       }
-      // Material "color" uses float 0-1 Spectrum, not integer RGBColor.
       std::string attribute_value{ ryt::str_to_lower(attr->Value()) };
-      if (tag_name == "material" && attribute_name == "color") {
-        convert<ryt::Spectrum, 3>(attribute_name, attribute_value, &ps);
-      } else {
-        parse_attribute(attribute_name, attribute_value, &ps);
-      }
+      parse_attribute(attribute_name, attribute_value, &ps);
     }
 
     // ================================================================================

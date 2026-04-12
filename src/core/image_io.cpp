@@ -9,7 +9,7 @@
 
 namespace ryt {
 
-void write_ppm(const std::string& filename, const std::vector<Spectrum>& pixels, int w, int h, bool ascii) {
+void write_ppm(const std::string& filename, const std::vector<RGBColor>& pixels, int w, int h, bool ascii) {
   std::ofstream file(filename, std::ios::binary);
   if (!file) {
     std::cerr << "Cannot open file " << filename << std::endl;
@@ -37,7 +37,7 @@ void write_ppm(const std::string& filename, const std::vector<Spectrum>& pixels,
   }
 }
 
-void write_png(const std::string& filename, const std::vector<Spectrum>& pixels, int w, int h) {
+void write_png(const std::string& filename, const std::vector<RGBColor>& pixels, int w, int h) {
   std::vector<unsigned char> data(w * h * 3);
   for (size_t i = 0; i < pixels.size(); ++i) {
     data[i * 3 + 0] = static_cast<unsigned char>(std::clamp(static_cast<int>(pixels[i].x * 255), 0, 255));

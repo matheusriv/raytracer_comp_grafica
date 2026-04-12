@@ -118,7 +118,12 @@ void App::material(const ParamSet& ps) {
   check_in_world_block_state("App::material()");
   auto type = ps.retrieve<std::string>("type", "flat");
   if (type == "flat") {
-    auto color = ps.retrieve<Spectrum>("color", Spectrum{ 1.0f, 0.0f, 0.0f });
+    auto color = ps.retrieve<RGBColor>("color", RGBColor{ 0.0f, 0.0f, 1.0f });
+    // Normaliza para [0, 1] caso a cor tenha sido passada no formato inteiro [0, 255]
+    if (color.r > 1.0f || color.g > 1.0f || color.b > 1.0f) {
+      color = color / 255.0f;
+    }
+
     m_render_options->current_material = std::make_shared<FlatMaterial>(color);
   }
 }

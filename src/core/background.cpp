@@ -14,21 +14,14 @@
 namespace ryt {
 
 BackgroundSingleColor::BackgroundSingleColor(const RGBColor& color, mapping_t mt)
-    : Background{ mt } {
-  m_single_color.r = color.r / max_channel_value;
-  m_single_color.g = color.g / max_channel_value;
-  m_single_color.b = color.b / max_channel_value;
-}
-
-BackgroundSingleColor::BackgroundSingleColor(const Spectrum& color, mapping_t mt)
     : Background{ mt }, m_single_color{ color } {}
 
-Spectrum BackgroundMultiColor::lerp(const Spectrum& S, const Spectrum& E, float t) {
+RGBColor BackgroundMultiColor::lerp(const RGBColor& S, const RGBColor& E, float t) {
   // Color in float, so we can interpolate.
-  const Spectrum& sf{ S };  // Start
-  const Spectrum& ef{ E };  // End
+  const RGBColor& sf{ S };  // Start
+  const RGBColor& ef{ E };  // End
   // the interpolation
-  Spectrum r;
+  RGBColor r;
   r.x = ((1.F - t) * sf.x) + (t * ef.x);
   r.y = ((1.F - t) * sf.y) + (t * ef.y);
   r.z = ((1.F - t) * sf.z) + (t * ef.z);
@@ -39,13 +32,13 @@ Spectrum BackgroundMultiColor::lerp(const Spectrum& S, const Spectrum& E, float 
   return r;
 }
 
-Spectrum BackgroundSingleColor::sampleUV(real_type u, real_type v) const { return m_single_color; }
+RGBColor BackgroundSingleColor::sampleUV(real_type u, real_type v) const { return m_single_color; }
 
-Spectrum BackgroundMultiColor::sampleUV(real_type u, real_type v) const {
+RGBColor BackgroundMultiColor::sampleUV(real_type u, real_type v) const {
   // Ok, now we got the (u,v) coordinate from the mapping process.
   // interpolate horizontally first.
-  Spectrum bottom = BackgroundMultiColor::lerp(m_corners[bl], m_corners[br], u);
-  Spectrum top = BackgroundMultiColor::lerp(m_corners[tl], m_corners[tr], u);
+  RGBColor bottom = BackgroundMultiColor::lerp(m_corners[bl], m_corners[br], u);
+  RGBColor top = BackgroundMultiColor::lerp(m_corners[tl], m_corners[tr], u);
   //  now, interpolate vertically, based on the (interpolated) colors from previous step.
   return BackgroundMultiColor::lerp(top, bottom, v);
 }
@@ -58,20 +51,24 @@ Background* create_color_background(std::string_view type, const ParamSet& ps) {
   if (type == "single_color") {
     // The tag:
     // <background type="single_color" color="153 204 255"/>
-    RGBColor single_color{ ps.retrieve<RGBColor>("color", color_black) };
+    RGBColor single_color = ps.retrieve<RGBColor>("color", RGBColor{ 0.0f, 0.0f, 0.0f });
+    if (single_color.r > 1.0f || single_color.g > 1.0f || single_color.b > 1.0f) {
+      single_color = single_color / Background::max_channel_value;
+    }
     return new BackgroundSingleColor(single_color);
   }
   if (type == "4_colors") {
     // List of color from the scene to be passed onto the constructor.
-    std::array<Spectrum, 4> color_list;
+    std::array<RGBColor, 4> color_list;
     // The tag:
     // <background type="4_colors"  bl="0 0 51" tl="0 255 51" tr="255 255 51" br="255 0 51" />
     size_t idx{ 0 };
     for (const auto& label : corner_name) {
-      RGBColor rgb_color{ ps.retrieve<RGBColor>(label, color_black) };
-      color_list[idx++] = Spectrum{ rgb_color.r / Background::max_channel_value,
-                                    rgb_color.g / Background::max_channel_value,
-                                    rgb_color.b / Background::max_channel_value };
+      RGBColor c = ps.retrieve<RGBColor>(label, RGBColor{ 0.0f, 0.0f, 0.0f });
+      if (c.r > 1.0f || c.g > 1.0f || c.b > 1.0f) {
+        c = c / Background::max_channel_value;
+      }
+      color_list[idx++] = c;
     }
     return new BackgroundMultiColor(color_list);
   }

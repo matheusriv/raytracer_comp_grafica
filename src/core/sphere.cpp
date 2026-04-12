@@ -15,17 +15,21 @@ Sphere::Sphere(const Point3f& center, real_type radius, std::shared_ptr<Material
 static real_type solve_quadratic(const Rayf& r, const Point3f& center, real_type radius) {
   Vector3f oc = r.o - center;
   real_type a = dot(r.d, r.d);
-  real_type b = 2.0f * dot(oc, r.d);
-  real_type c = dot(oc, oc) - radius * radius;
-  real_type discriminant = b * b - 4.0f * a * c;
 
-  if (discriminant < 0.0f) {
+  // Reformulação algébrica para mitigar cancelamento catastrófico (perda de precisão)
+  // Usamos a identidade de Lagrange para expressar 1/4 do discriminante
+  Vector3f d_cross_oc = cross(r.d, oc);
+  real_type discriminant_per_4 = a * (radius * radius) - dot(d_cross_oc, d_cross_oc);
+
+  if (discriminant_per_4 < 0.0f) {
     return -1.0f;
   }
 
-  real_type sqrt_disc = std::sqrt(discriminant);
-  real_type t1 = (-b - sqrt_disc) / (2.0f * a);
-  real_type t2 = (-b + sqrt_disc) / (2.0f * a);
+  real_type sqrt_disc = std::sqrt(discriminant_per_4);
+  real_type half_b = dot(oc, r.d);
+
+  real_type t1 = (-half_b - sqrt_disc) / a;
+  real_type t2 = (-half_b + sqrt_disc) / a;
 
   if (t1 >= r.t_min && t1 <= r.t_max) return t1;
   if (t2 >= r.t_min && t2 <= r.t_max) return t2;

@@ -36,17 +36,15 @@ public:
   /// Default Dtro.
   virtual ~Background() = default;
   /// Returns a color to client.
-  [[nodiscard]] virtual Spectrum sampleUV(real_type u, real_type v) const = 0;
+  [[nodiscard]] virtual RGBColor sampleUV(real_type u, real_type v) const = 0;
 };
 
 class BackgroundSingleColor : public Background {
 private:
   /// Each corner has a color associated with.
-  Spectrum m_single_color{ 0, 0, 0 };
+  RGBColor m_single_color{ 0.0f, 0.0f, 0.0f };
 
 public:
-  /// Ctro receives a single color.
-  BackgroundSingleColor(const Spectrum& color, mapping_t mt = mapping_t::screen);
   /// Ctro receives a single color.
   BackgroundSingleColor(const RGBColor& color, mapping_t mt = mapping_t::screen);
 
@@ -57,14 +55,15 @@ public:
   /*!
    * Assuming u,v \in [0,1], and origin at lower left corner.
    */
-  [[nodiscard]] Spectrum sampleUV(real_type u, real_type v) const override;
+  [[nodiscard]] RGBColor sampleUV(real_type u, real_type v) const override;
 };
 
 class BackgroundMultiColor : public Background {
 private:
   /// Each corner has a color associated with.
-  std::array<Spectrum, 4> m_corners
-    = { Spectrum{ 0, 0, 0 }, Spectrum{ 0, 0, 0 }, Spectrum{ 0, 0, 0 }, Spectrum{ 0, 0, 0 } };
+  std::array<RGBColor, 4> m_corners
+    = { RGBColor{ 0.0f, 0.0f, 0.0f }, RGBColor{ 0.0f, 0.0f, 0.0f }, 
+        RGBColor{ 0.0f, 0.0f, 0.0f }, RGBColor{ 0.0f, 0.0f, 0.0f } };
   /// Corner indices.
   enum Corners_e : std::uint8_t {
     bl = 0,  //!< Bottom left corner.
@@ -74,11 +73,11 @@ private:
   };
 
   /// Return the linearly interpolated color in [A;B], based on the parameter \f$0\leq t \leq 1.\f$
-  [[nodiscard]] static Spectrum lerp(const Spectrum& S, const Spectrum& E, float t);
+  [[nodiscard]] static RGBColor lerp(const RGBColor& S, const RGBColor& E, float t);
 
 public:
   /// Ctro receives a list of four colors, for each corner.
-  BackgroundMultiColor(const std::array<Spectrum, 4>& colors, mapping_t mt = mapping_t::spherical)
+  BackgroundMultiColor(const std::array<RGBColor, 4>& colors, mapping_t mt = mapping_t::spherical)
       : Background{ mt } {
     // It's precondition to have 4 colors.
     assert(colors.size() == 4);
@@ -97,7 +96,7 @@ public:
   ~BackgroundMultiColor() override = default;
 
   /// Sample and returns a color, based on the raster coordinate or ray.
-  [[nodiscard]] Spectrum sampleUV(real_type u, real_type v) const override;
+  [[nodiscard]] RGBColor sampleUV(real_type u, real_type v) const override;
 };
 
 // Factory pattern functions.

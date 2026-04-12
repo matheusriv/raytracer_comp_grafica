@@ -27,8 +27,8 @@ Film::Film(const Point2i& resolution,
 
 Film::~Film() = default;
 
-/// Add the Spectrum color to image. Pixel coords comes as (x,y).
-void Film::add_sample(const Point2i& pixel_coord, const Spectrum& pixel_color) {
+/// Add the RGBColor to image. Pixel coords comes as (x,y).
+void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
   int x = pixel_coord.x;
   int y = pixel_coord.y;
   if (x >= 0 && x < m_full_resolution.x && y >= 0 && y < m_full_resolution.y) {
