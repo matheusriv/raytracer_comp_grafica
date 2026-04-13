@@ -44,9 +44,7 @@ void write_png(const std::string& filename, const std::vector<RGBColor>& pixels,
     data[i * 3 + 1] = static_cast<unsigned char>(std::clamp(static_cast<int>(pixels[i].y * 255), 0, 255));
     data[i * 3 + 2] = static_cast<unsigned char>(std::clamp(static_cast<int>(pixels[i].z * 255), 0, 255));
   }
-  
-  // Ray tracers frequentemente mapeiam a coordenada (0,0) no canto inferior esquerdo.
-  // O stb_image_write inverte a imagem verticalmente na hora de escrever se solicitarmos.
+
   stbi_flip_vertically_on_write(false);
   stbi_write_png(filename.c_str(), w, h, 3, data.data(), w * 3);
 }

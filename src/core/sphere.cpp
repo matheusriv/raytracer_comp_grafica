@@ -16,8 +16,8 @@ static real_type solve_quadratic(const Rayf& r, const Point3f& center, real_type
   Vector3f oc = r.o - center;
   real_type a = dot(r.d, r.d);
 
-  // Reformulação algébrica para mitigar cancelamento catastrófico (perda de precisão)
-  // Usamos a identidade de Lagrange para expressar 1/4 do discriminante
+  // Algebraic reformulation to mitigate catastrophic cancellation (loss of precision)
+  // using Lagrange's identity to express 1/4 of the discriminant
   Vector3f d_cross_oc = cross(r.d, oc);
   real_type discriminant_per_4 = a * (radius * radius) - dot(d_cross_oc, d_cross_oc);
 

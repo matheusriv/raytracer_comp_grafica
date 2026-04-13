@@ -673,7 +673,7 @@ T clamp(T value, U low, V high) {
 }
 
 static const RGBColor color_black{0.0f, 0.0f, 0.0f};
-
+static const RGBColor color_white{1.0f, 1.0f, 1.0f};
 
 } // namespace ryt
 

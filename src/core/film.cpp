@@ -37,7 +37,6 @@ void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
   }
 }
 
-/// Convert Spectrum image information to RGB, compute final pixel values, write image.
 void Film::write_image() const {
   if (m_image_type == image_type_e::PPM3 || m_image_type == image_type_e::PPM6) {
     bool ascii = (m_image_type == image_type_e::PPM3);
@@ -52,28 +51,28 @@ void Film::write_image() const {
 /// Chooses the filename based on the CLI and scene file info.
 std::string handles_filename(const ParamSet& ps) {
   std::string filename;
-  // Se o usuário forneceu um arquivo de saída via CLI, ele tem prioridade.
+  // If the user provided an output file via CLI, it takes priority.
   if (!App::m_current_run_options.outfile.empty()) {
     filename = App::m_current_run_options.outfile;
   } else {
-    // Caso contrário, recupera do arquivo de cena (XML)
+    // Otherwise, retrieve from the scene file (XML)
     filename = ps.retrieve<std::string>("filename", "output");
   }
 
   std::string img_type = ps.retrieve<std::string>("img_type", "png");
 
-  // Se o nome do arquivo já possuir extensão, removemos para pegar apenas o nome
+  // If the filename already has an extension, remove it to get only the name
   size_t last_dot = filename.find_last_of('.');
   size_t last_slash = filename.find_last_of("/\\");
   if (last_dot != std::string::npos && (last_slash == std::string::npos || last_dot > last_slash)) {
     filename = filename.substr(0, last_dot);
   }
   
-  // Adicionamos a extensão apropriada com base no tipo de imagem solicitado
+  // Add the appropriate extension based on the requested image type
   filename += (img_type == "png") ? ".png" : ".ppm";
 
-  // Se for apenas um nome de arquivo simples (sem caminhos de diretório indicados), 
-  // salvamos por padrão no diretório results/
+  // If it's just a simple filename (without any directory paths), 
+  // save it by default in the results/ directory
   if (filename.find('/') == std::string::npos && filename.find('\\') == std::string::npos) {
     filename = "../results/" + filename;
   }
@@ -140,4 +139,5 @@ Film* create_film(const ParamSet& ps) {
 
   return new Film(dimensions, filename, type, apply_gamma_correction);
 }
-}  // namespace
+
+}  // namespace ryt

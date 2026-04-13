@@ -99,7 +99,7 @@ void validate_arguments(int argc, char* argv[], ryt::RunningOptions& run_options
   }
 }
 
-std::string to_string(const ryt::RunningOptions& ro) {
+std::string run_options_to_string(const ryt::RunningOptions& ro) {
   std::ostringstream oss;
   oss << "- cropwindow: [" << ro.crop_window[0] << " " << ro.crop_window[1] << " "
       << ro.crop_window[2] << " " << ro.crop_window[3] << "]\n";
@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
   if (run_options.verbose) {  // Show options set by user if in "verbose" mode.
     constexpr short line_length{ 80 };
     std::cout << std::setw(line_length) << std::setfill('-') << "\n";
-    std::cout << ">>> Running options are:\n" << to_string(run_options) << '\n';
+    std::cout << ">>> Running options are:\n" << run_options_to_string(run_options) << '\n';
     std::cout << std::setw(line_length) << std::setfill('-') << "\n\n";
   }
 

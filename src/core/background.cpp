@@ -35,7 +35,6 @@ RGBColor BackgroundMultiColor::lerp(const RGBColor& S, const RGBColor& E, float 
 RGBColor BackgroundSingleColor::sampleUV(real_type u, real_type v) const { return m_single_color; }
 
 RGBColor BackgroundMultiColor::sampleUV(real_type u, real_type v) const {
-  // Ok, now we got the (u,v) coordinate from the mapping process.
   // interpolate horizontally first.
   RGBColor bottom = BackgroundMultiColor::lerp(m_corners[bl], m_corners[br], u);
   RGBColor top = BackgroundMultiColor::lerp(m_corners[tl], m_corners[tr], u);
@@ -51,7 +50,7 @@ Background* create_color_background(std::string_view type, const ParamSet& ps) {
   if (type == "single_color") {
     // The tag:
     // <background type="single_color" color="153 204 255"/>
-    RGBColor single_color = ps.retrieve<RGBColor>("color", RGBColor{ 0.0f, 0.0f, 0.0f });
+    RGBColor single_color = ps.retrieve<RGBColor>("color", color_black);
     if (single_color.r > 1.0f || single_color.g > 1.0f || single_color.b > 1.0f) {
       single_color = single_color / Background::max_channel_value;
     }
@@ -64,7 +63,7 @@ Background* create_color_background(std::string_view type, const ParamSet& ps) {
     // <background type="4_colors"  bl="0 0 51" tl="0 255 51" tr="255 255 51" br="255 0 51" />
     size_t idx{ 0 };
     for (const auto& label : corner_name) {
-      RGBColor c = ps.retrieve<RGBColor>(label, RGBColor{ 0.0f, 0.0f, 0.0f });
+      RGBColor c = ps.retrieve<RGBColor>(label, color_black);
       if (c.r > 1.0f || c.g > 1.0f || c.b > 1.0f) {
         c = c / Background::max_channel_value;
       }
