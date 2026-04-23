@@ -12,7 +12,7 @@
 #include "material.hpp"
 #include "primitive.hpp"
 #include "scene.hpp"
-#include "integrator.hpp"
+#include "../integrators/integrator.hpp"
 
 // Type of map we want to use.
 #define Dictionary std::unordered_map
@@ -28,7 +28,7 @@ struct RenderOptions {
   /// Background object
   std::unique_ptr<Background> background;
   /// Camera object, owner of the film.
-  std::unique_ptr<Camera> camera;
+  std::shared_ptr<Camera> camera;
   /// Scene object
   std::unique_ptr<Scene> scene;
   /// Integrator object

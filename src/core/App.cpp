@@ -223,7 +223,7 @@ void App::world_end(const ParamSet& ps) {
       std::move(m_render_options->primitives));
   // Create integrator
   m_render_options->integrator = std::unique_ptr<Integrator>(
-      create_integrator(m_render_options->actors["integrator"]));
+      create_integrator(m_render_options->camera, m_render_options->actors["integrator"]));
 
   bool scene_and_integrator_ok = m_render_options->scene && m_render_options->integrator;
 
@@ -236,7 +236,7 @@ void App::world_end(const ParamSet& ps) {
       << m_render_options->camera->film().get_resolution().y << "\n";
     //================================================================================
     auto start = std::chrono::steady_clock::now();
-    m_render_options->integrator->render(*m_render_options->camera, *m_render_options->scene);
+    m_render_options->integrator->render(*m_render_options->scene);
     auto end = std::chrono::steady_clock::now();
     //================================================================================
     auto diff = end - start;  // Store the time difference between start and end

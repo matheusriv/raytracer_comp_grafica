@@ -1,22 +1,22 @@
 #include "integrator.hpp"
-#include "surfel.hpp"
-#include "film.hpp"
+#include "../core/surfel.hpp"
+#include "../core/film.hpp"
 #include <fstream>
 #include <iostream>
 
 namespace ryt {
 
-void FlatIntegrator::render(const Camera& camera, const Scene& scene) {
+void FlatIntegrator::render(const Scene& scene) {
   std::ofstream ray_file("../results/ray_debug.txt");
   if (!ray_file.is_open()) {
     std::cerr << "Failed to open ray_debug.txt\n";
     return;
   }
-  auto width = camera.film().get_resolution().x;
-  auto height = camera.film().get_resolution().y;
+  auto width = camera->film().get_resolution().x;
+  auto height = camera->film().get_resolution().y;
   for(int h = 0 ; h < height ; h++) {
     for(int w = 0 ; w < width ; w++) {
-      Rayf ray = camera.generate_ray(w, h);
+      Rayf ray = camera->generate_ray(w, h);
       ray_file << "@ pixel(" << w << "," << h << "), " << ray << std::endl;
 
       // sample background color via screen-space UV.
@@ -34,19 +34,19 @@ void FlatIntegrator::render(const Camera& camera, const Scene& scene) {
         }
       }
 
-      camera.film().add_sample(Point2i{w, h}, color);
+      camera->film().add_sample(Point2i{w, h}, color);
     }
   }
-  camera.film().write_image();
+  camera->film().write_image();
 }
 
-Integrator* create_integrator(const ParamSet& ps) {
+Integrator* create_integrator(std::shared_ptr<Camera> camera, const ParamSet& ps) {
   auto type = ps.retrieve<std::string>("type", "flat");
   if (type == "flat") {
-    return new FlatIntegrator();
+    return new FlatIntegrator(std::move(camera));
   }
   std::cerr << "Warning: Unknown integrator type '" << type << "', falling back to 'flat'.\n";
-  return new FlatIntegrator();
+  return new FlatIntegrator(std::move(camera));
 }
 
 } // namespace ryt

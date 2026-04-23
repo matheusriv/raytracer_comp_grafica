@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     src/core/main.cpp
     src/core/App.cpp
-    src/core/integrator.cpp
+    src/integrators/integrator.cpp
     src/core/background.cpp
     src/core/camera.cpp
     src/core/film.cpp
