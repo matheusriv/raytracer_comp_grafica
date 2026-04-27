@@ -675,6 +675,33 @@ T clamp(T value, U low, V high) {
 static const RGBColor color_black{0.0f, 0.0f, 0.0f};
 static const RGBColor color_white{1.0f, 1.0f, 1.0f};
 
+template <typename T>
+class Bounds3 {
+public:
+  Point3<T> p_min, p_max;
+  Bounds3() {
+    T minNum = std::numeric_limits<T>::lowest();
+    T maxNum = std::numeric_limits<T>::max();
+    p_min = Point3<T>(maxNum, maxNum, maxNum);
+    p_max = Point3<T>(minNum, minNum, minNum);
+  }
+  Bounds3(const Point3<T>& p1, const Point3<T>& p2) {
+    p_min = min(p1, p2);
+    p_max = max(p1, p2);
+  }
+};
+
+using Bounds3f = Bounds3<real_type>;
+using Bounds3i = Bounds3<int>;
+
+template <typename T>
+Bounds3<T> Union(const Bounds3<T>& b1, const Bounds3<T>& b2) {
+  Bounds3<T> ret;
+  ret.p_min = min(b1.p_min, b2.p_min);
+  ret.p_max = max(b1.p_max, b2.p_max);
+  return ret;
+}
+
 } // namespace ryt
 
 #endif

@@ -2,6 +2,7 @@
 #define INTEGRATOR_HPP
 
 #include <memory>
+#include <optional>
 #include "../core/scene.hpp"
 #include "../core/camera.hpp"
 #include "../core/paramset.hpp"
@@ -18,11 +19,15 @@ public:
   virtual void render(const Scene& scene) = 0;
 };
 
-/// A simple integrator that returns the unlit material color
-class FlatIntegrator : public Integrator {
+/// Base class for integrators that sample rays from the camera
+class SamplerIntegrator : public Integrator {
 public:
-  FlatIntegrator(std::shared_ptr<Camera> cam) : Integrator(std::move(cam)) {}
+  SamplerIntegrator(std::shared_ptr<Camera> cam) : Integrator(std::move(cam)) {}
+  virtual ~SamplerIntegrator() = default;
+
+  virtual void preprocess(const Scene& scene);
   void render(const Scene& scene) override;
+  virtual std::optional<RGBColor> Li(const Rayf& ray, const Scene& scene) const = 0;
 };
 
 /// Factory function to create integrators

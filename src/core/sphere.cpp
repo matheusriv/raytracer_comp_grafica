@@ -2,12 +2,17 @@
 
 #include "geometry.hpp"
 #include "sphere.hpp"
+#include "surfel.hpp"
 
 namespace ryt {
 
-Sphere::Sphere(const Point3f& center, real_type radius, std::shared_ptr<Material> mat)
-    : m_center{ center }, m_radius{ radius } {
-  m_material = std::move(mat);
+Sphere::Sphere(const Point3f& center, real_type radius, bool flip_n)
+    : Shape(flip_n), m_center{ center }, m_radius{ radius } {
+}
+
+Bounds3f Sphere::world_bounds() const {
+  return Bounds3f(m_center - Vector3f(m_radius, m_radius, m_radius),
+                  m_center + Vector3f(m_radius, m_radius, m_radius));
 }
 
 /// Solves the quadratic ray-sphere intersection equation.
@@ -36,19 +41,20 @@ static real_type solve_quadratic(const Rayf& r, const Point3f& center, real_type
   return -1.0f;
 }
 
-bool Sphere::intersect(const Rayf& r, Surfel* sf) const {
+bool Sphere::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
   real_type t = solve_quadratic(r, m_center, m_radius);
   if (t < 0.0f) return false;
+
+  if (t_hit) *t_hit = t;
 
   if (sf != nullptr) {
     sf->p         = r(t);
     sf->n         = normalize(sf->p - m_center);
+    if (flip_normals) sf->n = sf->n * -1.0f;
     sf->wo        = r.d * -1.0f;
     sf->time      = t;
     sf->uv        = Point2f{ 0.0f, 0.0f };
-    sf->primitive = this;
   }
-  r.t_max = t;  // narrow the valid interval for subsequent hits (t_max is mutable)
   return true;
 }
 
@@ -56,10 +62,11 @@ bool Sphere::intersect_p(const Rayf& r) const {
   return solve_quadratic(r, m_center, m_radius) >= 0.0f;
 }
 
-Sphere* create_sphere(const ParamSet& ps, std::shared_ptr<Material> mat) {
+Sphere* create_sphere(const ParamSet& ps) {
   Point3f center = ps.retrieve<Point3f>("center", Point3f{ 0.0f, 0.0f, 0.0f });
   real_type radius = ps.retrieve<real_type>("radius", 1.0f);
-  return new Sphere(center, radius, std::move(mat));
+  bool flip_n = ps.retrieve<bool>("flip_normals", false);
+  return new Sphere(center, radius, flip_n);
 }
 
 }  // namespace ryt

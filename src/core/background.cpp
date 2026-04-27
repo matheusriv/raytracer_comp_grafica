@@ -1,7 +1,6 @@
 #include <array>
 #include <iomanip>
 #include <sstream>
-//#include <glm/ext/scalar_constants.hpp>
 #include <string_view>
 
 #include "../../msg_system/error.hpp"
@@ -56,7 +55,7 @@ Background* create_color_background(std::string_view type, const ParamSet& ps) {
     }
     return new BackgroundSingleColor(single_color);
   }
-  if (type == "4_colors") {
+  if (type == "4_colors" || type == "colors") {
     // List of color from the scene to be passed onto the constructor.
     std::array<RGBColor, 4> color_list;
     // The tag:

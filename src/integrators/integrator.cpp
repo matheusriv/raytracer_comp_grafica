@@ -1,4 +1,5 @@
 #include "integrator.hpp"
+#include "raycast_integrator.hpp"
 #include "../core/surfel.hpp"
 #include "../core/film.hpp"
 #include <fstream>
@@ -6,32 +7,28 @@
 
 namespace ryt {
 
-void FlatIntegrator::render(const Scene& scene) {
-  std::ofstream ray_file("../results/ray_debug.txt");
-  if (!ray_file.is_open()) {
-    std::cerr << "Failed to open ray_debug.txt\n";
-    return;
-  }
+void SamplerIntegrator::preprocess(const Scene& scene) {
+  // Default empty implementation
+}
+
+void SamplerIntegrator::render(const Scene& scene) {
+  preprocess(scene);
+
   auto width = camera->film().get_resolution().x;
   auto height = camera->film().get_resolution().y;
-  for(int h = 0 ; h < height ; h++) {
-    for(int w = 0 ; w < width ; w++) {
+
+  for (int h = 0; h < height; h++) {
+    for (int w = 0; w < width; w++) {
       Rayf ray = camera->generate_ray(w, h);
-      ray_file << "@ pixel(" << w << "," << h << "), " << ray << std::endl;
 
-      // sample background color via screen-space UV.
-      auto color = scene.background->sampleUV(
-          float(w) / float(width), float(h) / float(height));
+      auto L_opt = Li(ray, scene);
+      RGBColor color;
 
-      // Test each primitive; intersect() narrows ray.t_max so the first hit wins.
-      Surfel sf;
-      for (const auto& prim : scene.primitives) {
-        if (prim->intersect(ray, &sf)) {
-          const Material* mat = prim->get_material();
-          if (mat != nullptr) {
-            color = mat->color();
-          }
-        }
+      if (L_opt.has_value()) {
+        color = L_opt.value();
+      } else {
+        // sample background color via screen-space UV.
+        color = scene.background->sampleUV(float(w) / float(width), float(h) / float(height));
       }
 
       camera->film().add_sample(Point2i{w, h}, color);
@@ -43,10 +40,10 @@ void FlatIntegrator::render(const Scene& scene) {
 Integrator* create_integrator(std::shared_ptr<Camera> camera, const ParamSet& ps) {
   auto type = ps.retrieve<std::string>("type", "flat");
   if (type == "flat") {
-    return new FlatIntegrator(std::move(camera));
+    return new RayCastIntegrator(std::move(camera));
   }
   std::cerr << "Warning: Unknown integrator type '" << type << "', falling back to 'flat'.\n";
-  return new FlatIntegrator(std::move(camera));
+  return new RayCastIntegrator(std::move(camera));
 }
 
 } // namespace ryt

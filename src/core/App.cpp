@@ -103,7 +103,7 @@ void App::background(const ParamSet& ps) {
   }
   
   Background* bkg{ nullptr };
-  if (type == "single_color" or type == "4_colors") {
+  if (type == "single_color" or type == "4_colors" or type == "colors") {
     bkg = create_color_background(type, ps);
   } else {
     WARNING(std::string{ "API::background(): unknown background type \"" } + type
@@ -127,6 +127,35 @@ void App::material(const ParamSet& ps) {
   }
 }
 
+void App::make_named_material(const ParamSet& ps) {
+  check_in_world_block_state("App::make_named_material()");
+  auto type = ps.retrieve<std::string>("type", "flat");
+  auto name = ps.retrieve<std::string>("name", "");
+  if (name.empty()) {
+    WARNING("make_named_material missing name.");
+    return;
+  }
+  
+  if (type == "flat") {
+    auto color = ps.retrieve<RGBColor>("color", RGBColor{ 0.0f, 0.0f, 1.0f });
+    if (color.r > 1.0f || color.g > 1.0f || color.b > 1.0f) {
+      color = color / 255.0f;
+    }
+    m_render_options->named_materials[name] = std::make_shared<FlatMaterial>(color);
+  }
+}
+
+void App::named_material(const ParamSet& ps) {
+  check_in_world_block_state("App::named_material()");
+  auto name = ps.retrieve<std::string>("name", "");
+  auto it = m_render_options->named_materials.find(name);
+  if (it != m_render_options->named_materials.end()) {
+    m_render_options->current_material = it->second;
+  } else {
+    WARNING("named_material not found: " + name);
+  }
+}
+
 void App::integrator(const ParamSet& ps) {
   if (not check_in_setup_block_state("App::integrator()")) {
     return;
@@ -137,9 +166,22 @@ void App::integrator(const ParamSet& ps) {
 void App::object(const ParamSet& ps) {
   check_in_world_block_state("App::object()");
   auto type = ps.retrieve<std::string>("type", "");
+
+  std::shared_ptr<Material> mat = m_render_options->current_material;
+  auto mat_name = ps.retrieve<std::string>("material", "");
+  if (!mat_name.empty()) {
+    auto it = m_render_options->named_materials.find(mat_name);
+    if (it != m_render_options->named_materials.end()) {
+      mat = it->second;
+    } else {
+      WARNING("Material " + mat_name + " not found for object. Using current material.");
+    }
+  }
+
   if (type == "sphere") {
-    Sphere* sph = create_sphere(ps, m_render_options->current_material);
-    m_render_options->primitives.push_back(std::shared_ptr<Primitive>(sph));
+    Shape* shape = create_sphere(ps);
+    GeometricPrimitive* prim = new GeometricPrimitive(std::shared_ptr<Shape>(shape), mat);
+    m_render_options->primitives.push_back(std::shared_ptr<Primitive>(prim));
   }
 }
 
@@ -218,9 +260,10 @@ void App::world_end(const ParamSet& ps) {
   // The scene has already been parsed and properly set up. It's time to render the scene.
   
   // Create scene (with background and all collected primitives)
+  auto aggregate = std::make_shared<PrimList>(std::move(m_render_options->primitives));
   m_render_options->scene = std::make_unique<Scene>(
       std::move(m_render_options->background),
-      std::move(m_render_options->primitives));
+      aggregate);
   // Create integrator
   m_render_options->integrator = std::unique_ptr<Integrator>(
       create_integrator(m_render_options->camera, m_render_options->actors["integrator"]));

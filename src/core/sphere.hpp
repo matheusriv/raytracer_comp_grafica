@@ -1,17 +1,18 @@
 #ifndef SPHERE_HPP
 #define SPHERE_HPP
 
-#include "primitive.hpp"
+#include "shape.hpp"
 #include "paramset.hpp"
 
 namespace ryt {
 
 /// Sphere primitive defined by a center point and a radius.
-class Sphere : public Primitive {
+class Sphere : public Shape {
 public:
-  Sphere(const Point3f& center, real_type radius, std::shared_ptr<Material> mat);
+  Sphere(const Point3f& center, real_type radius, bool flip_n = false);
 
-  bool intersect(const Rayf& r, Surfel* sf) const override;
+  Bounds3f world_bounds() const override;
+  bool intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const override;
   bool intersect_p(const Rayf& r) const override;
 
 private:
@@ -19,7 +20,7 @@ private:
   real_type m_radius;
 };
 
-Sphere* create_sphere(const ParamSet& ps, std::shared_ptr<Material> mat);
+Sphere* create_sphere(const ParamSet& ps);
 
 }  // namespace ryt
 

@@ -12,12 +12,22 @@ namespace ryt {
 class Scene {
 public:
   std::unique_ptr<Background> background;
-  std::vector<std::shared_ptr<Primitive>> primitives;
+  std::shared_ptr<Primitive> aggregate;
 
   explicit Scene(std::unique_ptr<Background> bg) : background(std::move(bg)) {}
 
-  Scene(std::unique_ptr<Background> bg, std::vector<std::shared_ptr<Primitive>> prims)
-      : background(std::move(bg)), primitives(std::move(prims)) {}
+  Scene(std::unique_ptr<Background> bg, std::shared_ptr<Primitive> agg)
+      : background(std::move(bg)), aggregate(std::move(agg)) {}
+
+  bool intersect(const Rayf& r, Surfel* sf) const {
+    if (aggregate) return aggregate->intersect(r, sf);
+    return false;
+  }
+  
+  bool intersect_p(const Rayf& r) const {
+    if (aggregate) return aggregate->intersect_p(r);
+    return false;
+  }
 };
 
 } // namespace ryt

@@ -37,6 +37,8 @@ struct RenderOptions {
   std::vector<std::shared_ptr<Primitive>> primitives;
   /// The most recently defined material (applied to subsequent objects).
   std::shared_ptr<Material> current_material;
+  /// Named materials library
+  Dictionary<std::string, std::shared_ptr<Material>> named_materials;
 };
 
 /*!
@@ -101,6 +103,8 @@ public:
   static void look_at(const ParamSet& ps);
   static void background(const ParamSet& ps);
   static void material(const ParamSet& ps);
+  static void make_named_material(const ParamSet& ps);
+  static void named_material(const ParamSet& ps);
   static void integrator(const ParamSet& ps);
   static void object(const ParamSet& ps);
   static void world_begin(const ParamSet& ps);

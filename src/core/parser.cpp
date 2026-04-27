@@ -200,11 +200,27 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     },
   },
   {
+    "make_named_material",
+    {
+      "type",
+      "name",
+      "color",
+    },
+  },
+  {
+    "named_material",
+    {
+      "name",
+    },
+  },
+  {
     "object",
     {
       "type",
       "radius",
       "center",
+      "material",
+      "flip_normals",
     },
   },
   {
@@ -225,6 +241,8 @@ std::unordered_map<std::string, std::function<void(const ryt::ParamSet&)>> api_f
   { "world_end", ryt::App::world_end },
   { "film", ryt::App::film },
   { "material", ryt::App::material },
+  { "make_named_material", ryt::App::make_named_material },
+  { "named_material", ryt::App::named_material },
   { "integrator", ryt::App::integrator },
   { "object", ryt::App::object },
 };
@@ -236,7 +254,9 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "name", convert<std::string> },  // "name" must be a string.
   //
   { "color", convert<ryt::RGBColor, 3> },  // "color" is a RGBColor with 3 fields.
+  { "material", convert<std::string> },
   { "flip", convert<bool> },
+  { "flip_normals", convert<bool> },
   // Background attributes.
   { "mapping", convert<std::string> },
   { "bl", convert<ryt::RGBColor, 3> },
