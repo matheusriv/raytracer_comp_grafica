@@ -101,6 +101,25 @@ void App::background(const ParamSet& ps) {
   if (type == "unknown") {
     ERROR("API::background(): Missing \"type\" specificaton for the background.");
   }
+
+  if (m_current_run_options.verbose) {
+    std::cout << ">>> Parâmetros de background:\n"
+            << "    - type: " << type << "\n";
+    if (type == "single_color") {
+      auto color = ps.retrieve<RGBColor>("color", color_black);
+      std::cout << "    - color: " << color << "\n";
+    } else if (type == "4_colors" || type == "colors") {
+      auto bl = ps.retrieve<RGBColor>("bl", color_black);
+      auto tl = ps.retrieve<RGBColor>("tl", color_black);
+      auto tr = ps.retrieve<RGBColor>("tr", color_black);
+      auto br = ps.retrieve<RGBColor>("br", color_black);
+      std::cout << "    - bl: " << bl << "\n"
+                << "    - tl: " << tl << "\n"
+                << "    - tr: " << tr << "\n"
+                << "    - br: " << br << "\n";
+    }
+    std::cout << "\n";
+  }
   
   Background* bkg{ nullptr };
   if (type == "single_color" or type == "4_colors" or type == "colors") {
