@@ -10,6 +10,7 @@ set(SOURCES
     src/core/App.cpp
     src/integrators/integrator.cpp
     src/integrators/raycast_integrator.cpp
+    src/integrators/normal_map_integrator.cpp
     src/core/background.cpp
     src/core/camera.cpp
     src/core/film.cpp

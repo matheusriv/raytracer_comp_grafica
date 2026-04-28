@@ -1,5 +1,6 @@
 #include "integrator.hpp"
 #include "raycast_integrator.hpp"
+#include "normal_map_integrator.hpp"
 #include "../core/surfel.hpp"
 #include "../core/film.hpp"
 #include <fstream>
@@ -41,6 +42,9 @@ Integrator* create_integrator(std::shared_ptr<Camera> camera, const ParamSet& ps
   auto type = ps.retrieve<std::string>("type", "flat");
   if (type == "flat") {
     return new RayCastIntegrator(std::move(camera));
+  }
+  if (type == "normal_map") {
+    return new NormalMapIntegrator(std::move(camera));
   }
   std::cerr << "Warning: Unknown integrator type '" << type << "', falling back to 'flat'.\n";
   return new RayCastIntegrator(std::move(camera));

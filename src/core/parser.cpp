@@ -124,6 +124,11 @@ bool convert(const std::string& attr_name, const std::string& attr_content, ryt:
         break;  // There is something in the vector.
       }
     }
+
+    if (not input_string_still_has_values) {
+      break; // Escape the while loop as well
+    }
+
     // Add the newly extracted composite item to the result vector.
     multiple_composite_values.push_back(single_composite_value);
   }
