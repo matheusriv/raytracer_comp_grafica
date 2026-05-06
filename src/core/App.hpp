@@ -13,6 +13,7 @@
 #include "primitive.hpp"
 #include "scene.hpp"
 #include "../integrators/integrator.hpp"
+#include "light.hpp"
 
 // Type of map we want to use.
 #define Dictionary std::unordered_map
@@ -39,6 +40,10 @@ struct RenderOptions {
   std::shared_ptr<Material> current_material;
   /// Named materials library
   Dictionary<std::string, std::shared_ptr<Material>> named_materials;
+  /// List of light sources in the scene.
+  std::vector<std::shared_ptr<Light>> lights;
+  /// Ambient light for the scene.
+  std::shared_ptr<Light> ambient_light;
 };
 
 /*!
@@ -107,6 +112,7 @@ public:
   static void named_material(const ParamSet& ps);
   static void integrator(const ParamSet& ps);
   static void object(const ParamSet& ps);
+  static void light_source(const ParamSet& ps);
   static void world_begin(const ParamSet& ps);
   static void world_end(const ParamSet& ps);
   static void film(const ParamSet& ps);

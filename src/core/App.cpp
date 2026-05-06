@@ -19,6 +19,8 @@
 #include "paramset.hpp"
 #include "parser.hpp"
 #include "scene.hpp"
+#include "blinn_material.hpp"
+#include "light.hpp"
 
 namespace ryt{ 
 
@@ -143,6 +145,38 @@ void App::material(const ParamSet& ps) {
     }
 
     m_render_options->current_material = std::make_shared<FlatMaterial>(color);
+  } else if (type == "blinn") {
+    auto ka = ps.retrieve<RGBColor>("ambient", RGBColor{0.1f, 0.1f, 0.1f});
+    auto kd = ps.retrieve<RGBColor>("diffuse", RGBColor{0.5f, 0.5f, 0.5f});
+    auto ks = ps.retrieve<RGBColor>("specular", RGBColor{1.0f, 1.0f, 1.0f});
+    auto g = ps.retrieve<real_type>("glossiness", 256.0f);
+
+    if (ka.r > 1.0f || ka.g > 1.0f || ka.b > 1.0f) ka = ka / 255.0f;
+    if (kd.r > 1.0f || kd.g > 1.0f || kd.b > 1.0f) kd = kd / 255.0f;
+    if (ks.r > 1.0f || ks.g > 1.0f || ks.b > 1.0f) ks = ks / 255.0f;
+
+    m_render_options->current_material = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g);
+  }
+}
+
+void App::light_source(const ParamSet& ps) {
+  check_in_world_block_state("App::light_source()");
+  auto type = ps.retrieve<std::string>("type", "point");
+  auto I = ps.retrieve<RGBColor>("I", RGBColor{1.0f, 1.0f, 1.0f});
+  auto scale = ps.retrieve<Vector3f>("scale", Vector3f{1.0f, 1.0f, 1.0f});
+  
+  RGBColor final_I = RGBColor{I.r * scale.x, I.g * scale.y, I.b * scale.z};
+
+  if (type == "ambient") {
+    m_render_options->ambient_light = std::make_shared<AmbientLight>(final_I);
+  } else if (type == "directional") {
+    auto from = ps.retrieve<Point3f>("from", Point3f{0.0f, 0.0f, 0.0f});
+    auto to = ps.retrieve<Point3f>("to", Point3f{0.0f, 0.0f, -1.0f});
+    // Direction mapped backwards towards the light source for lighting ray calculations
+    m_render_options->lights.push_back(std::make_shared<DirectionalLight>(normalize(from - to), final_I));
+  } else if (type == "point") {
+    auto from = ps.retrieve<Point3f>("from", Point3f{0.0f, 0.0f, 0.0f});
+    m_render_options->lights.push_back(std::make_shared<PointLight>(from, final_I));
   }
 }
 
@@ -161,6 +195,17 @@ void App::make_named_material(const ParamSet& ps) {
       color = color / 255.0f;
     }
     m_render_options->named_materials[name] = std::make_shared<FlatMaterial>(color);
+  } else if (type == "blinn") {
+    auto ka = ps.retrieve<RGBColor>("ambient", RGBColor{0.1f, 0.1f, 0.1f});
+    auto kd = ps.retrieve<RGBColor>("diffuse", RGBColor{0.5f, 0.5f, 0.5f});
+    auto ks = ps.retrieve<RGBColor>("specular", RGBColor{1.0f, 1.0f, 1.0f});
+    auto g = ps.retrieve<real_type>("glossiness", 256.0f);
+
+    if (ka.r > 1.0f || ka.g > 1.0f || ka.b > 1.0f) ka = ka / 255.0f;
+    if (kd.r > 1.0f || kd.g > 1.0f || kd.b > 1.0f) kd = kd / 255.0f;
+    if (ks.r > 1.0f || ks.g > 1.0f || ks.b > 1.0f) ks = ks / 255.0f;
+
+    m_render_options->named_materials[name] = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g);
   }
 }
 

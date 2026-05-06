@@ -1,0 +1,10 @@
+<RT3>
+    <lookat look_from="0 0 0" look_at="0 0 10" up="0 1 0" />
+    <camera type="orthographic" screen_window="-4 4 -3 3"/>
+    <film type="image" w_res="800" h_res="600" filename="flat_spheres_ortho_test.png" img_type="png" gamma_corrected="false" />
+    <world_begin/>
+        <background type="4_colors" bl="176 214 175" tl="4 99 202" tr="4 99 202" br="176 214 175" />
+        <material type="flat" color="220 10 10" />
+        <object type="sphere" radius="0.2" center="-1.5 -1.5 10000" />
+    <world_end/>
+</RT3>

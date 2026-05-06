@@ -11,6 +11,7 @@ set(SOURCES
     src/integrators/integrator.cpp
     src/integrators/raycast_integrator.cpp
     src/integrators/normal_map_integrator.cpp
+    src/integrators/blinn_phong_integrator.cpp
     src/core/background.cpp
     src/core/camera.cpp
     src/core/film.cpp
@@ -18,6 +19,7 @@ set(SOURCES
     src/core/parser.cpp
     src/core/primitive.cpp
     src/core/sphere.cpp
+    src/core/light.cpp
     msg_system/error.cpp
     lib_tinyxml2/tinyxml2.cpp
 )

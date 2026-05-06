@@ -202,6 +202,10 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     {
       "type",
       "color",
+      "ambient",
+      "diffuse",
+      "specular",
+      "glossiness",
     },
   },
   {
@@ -210,6 +214,10 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "type",
       "name",
       "color",
+      "ambient",
+      "diffuse",
+      "specular",
+      "glossiness",
     },
   },
   {
@@ -234,6 +242,16 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "type"
     },
   },
+  {
+    "light_source",
+    {
+      "type",
+      "I",
+      "scale",
+      "from",
+      "to"
+    }
+  },
 };
 
 
@@ -250,6 +268,7 @@ std::unordered_map<std::string, std::function<void(const ryt::ParamSet&)>> api_f
   { "named_material", ryt::App::named_material },
   { "integrator", ryt::App::integrator },
   { "object", ryt::App::object },
+  { "light_source", ryt::App::light_source },
 };
 
 
@@ -262,6 +281,10 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "material", convert<std::string> },
   { "flip", convert<bool> },
   { "flip_normals", convert<bool> },
+  { "ambient", convert<ryt::RGBColor, 3> },
+  { "diffuse", convert<ryt::RGBColor, 3> },
+  { "specular", convert<ryt::RGBColor, 3> },
+  { "glossiness", convert<ryt::real_type> },
   // Background attributes.
   { "mapping", convert<std::string> },
   { "bl", convert<ryt::RGBColor, 3> },
@@ -286,6 +309,11 @@ std::unordered_map<std::string, ConverterFunction> converters{
   // Object attributes
   { "radius", convert<ryt::real_type> },
   { "center", convert<ryt::Point3f, 3> },
+  // Light attributes
+  { "I", convert<ryt::RGBColor, 3> },
+  { "scale", convert<ryt::Vector3f, 3> },
+  { "from", convert<ryt::Point3f, 3> },
+  { "to", convert<ryt::Point3f, 3> },
 };
 
 

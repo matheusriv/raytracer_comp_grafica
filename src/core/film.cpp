@@ -15,7 +15,10 @@
 
 namespace ryt {
 
-//=== Film Method Definitions
+// ==============================================================================
+// Film Class Implementation
+// ==============================================================================
+
 Film::Film(const Point2i& resolution,
            const std::string& filename,
            image_type_e image_type,
@@ -27,7 +30,10 @@ Film::Film(const Point2i& resolution,
 
 Film::~Film() = default;
 
-/// Add the RGBColor to image. Pixel coords comes as (x,y).
+/*!
+ * Adds a computed sample (pixel color) to the image at the given pixel coordinates.
+ * Checks boundaries to prevent out-of-bounds memory access.
+ */
 void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
   int x = pixel_coord.x;
   int y = pixel_coord.y;
@@ -37,6 +43,7 @@ void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
   }
 }
 
+/// Writes the accumulated pixel data to a file using the configured image format (PPM or PNG).
 void Film::write_image() const {
   if (m_image_type == image_type_e::PPM3 || m_image_type == image_type_e::PPM6) {
     bool ascii = (m_image_type == image_type_e::PPM3);
@@ -48,7 +55,11 @@ void Film::write_image() const {
   }
 }
 
-/// Chooses the filename based on the CLI and scene file info.
+// ==============================================================================
+// Standalone / Helper Functions
+// ==============================================================================
+
+/// Chooses and constructs the correct output filename based on CLI arguments and the scene file parameters.
 std::string handles_filename(const ParamSet& ps) {
   std::string filename;
   // If the user provided an output file via CLI, it takes priority.
@@ -80,12 +91,12 @@ std::string handles_filename(const ParamSet& ps) {
   return filename;
 }
 
-// /// Process ParamSet, extracts, validates a valid crop window.
+// Processes ParamSet, extracts, and validates a valid crop window.
 // ryt::Bounds2f handles_cropwindow(const ParamSet& ps) {
 //   
 // }
 
-/// Parses the dimensions of the film from the ParamSet.
+/// Parses the dimensions of the film from the ParamSet and applies quick-render downscaling if requested.
 ryt::Point2i handles_dimensions(const ParamSet& ps) {
   int width = ps.retrieve<int>("w_res", ps.retrieve<int>("x_res", 1280));
   int height = ps.retrieve<int>("h_res", ps.retrieve<int>("y_res", 720));
@@ -99,21 +110,25 @@ ryt::Point2i handles_dimensions(const ParamSet& ps) {
   return film_dimension;
 }
 
-/// Creates and returns a `Film` objected based on the `ParamSet` provided.
+// ==============================================================================
+// Factory Function
+// ==============================================================================
+
+/// Factory function that creates and returns a Film object based on the provided ParamSet.
 Film* create_film(const ParamSet& ps) {
 #ifdef DEBUG
   std::cout << ">>> Inside create_film()\n";
 #endif
-  //==[1] Choose the filename.
+  // [1] Choose the filename.
   auto filename = handles_filename(ps);
 
-  //==[2] Define the crop window information.
+  // [2] Define the crop window information.
   // auto crop_window = handles_cropwindow(ps);
 
-  //==[3] Retrieve film dimensions and handles quick_render option.
+  // [3] Retrieve film dimensions and handles quick_render option.
   Point2i dimensions = handles_dimensions(ps);
 
-  //==[4] Retrieve film type.
+  // [4] Retrieve film type.
   std::unordered_map<std::string, Film::image_type_e> image_type{
     { "png", Film::image_type_e::PNG },
     { "ppm3", Film::image_type_e::PPM3 },
@@ -122,7 +137,7 @@ Film* create_film(const ParamSet& ps) {
   };
   auto type{ image_type[ps.retrieve<std::string>("img_type", "png")] };
 
-  //==[5] Get gamma correction request.
+  // [5] Get gamma correction request.
   bool apply_gamma_correction = ps.retrieve<bool>("gamma_corrected", false);
 
 #ifdef DEBUG
