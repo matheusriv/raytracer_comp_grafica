@@ -11,10 +11,11 @@ public:
   RGBColor ka;
   RGBColor kd;
   RGBColor ks;
+  RGBColor mirror;
   float glossiness;
-
-  BlinnPhongMaterial(const RGBColor& ka, const RGBColor& kd, const RGBColor& ks, float g)
-      : ka(ka), kd(kd), ks(ks), glossiness(g) {}
+  
+  BlinnPhongMaterial(const RGBColor& ka, const RGBColor& kd, const RGBColor& ks, float g, const RGBColor& mirror = color_black)
+      : ka(ka), kd(kd), ks(ks), glossiness(g), mirror(mirror) {}
 
   RGBColor color() const override { return kd; }
 

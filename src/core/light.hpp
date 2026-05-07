@@ -74,6 +74,20 @@ public:
   RGBColor sample_Li(const Surfel& hit, Vector3f* wi, VisibilityTester* vis) override;
 };
 
+class SpotLight : public Light {
+public:
+  Point3f pLight;
+  Vector3f dir;
+  RGBColor I;
+  float cos_cutoff;
+  float cos_falloff;
+  float cutoff_rad;
+  float falloff_rad;
+
+  SpotLight(const Point3f& p, const Point3f& to, const RGBColor& I, float cutoff_deg, float falloff_deg);
+  RGBColor sample_Li(const Surfel& hit, Vector3f* wi, VisibilityTester* vis) override;
+};
+
 } // namespace ryt
 
 #endif // LIGHT_HPP

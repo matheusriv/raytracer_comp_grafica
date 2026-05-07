@@ -12,12 +12,12 @@ namespace ryt {
 Camera::Camera(std::unique_ptr<Film> film, const ParamSet& camera_ps, const ParamSet& lookat_ps)
     : m_film(std::move(film)) {
 
-  // [1] Retrieve lookat parameters
+  // Retrieve lookat parameters
   auto look_from = lookat_ps.retrieve<Point3f>("look_from", Point3f{0, 0, -7});
   auto look_at = lookat_ps.retrieve<Point3f>("look_at", Point3f{0, 0, 0});
   auto up = lookat_ps.retrieve<Vector3f>("up", Vector3f{0, 1, 0});
 
-  // [2] Compute camera frame (orthonormal basis)
+  // Compute camera frame (orthonormal basis)
   // Note: 'gaze' is the direction the camera is looking at.
   Vector3f gaze = look_at - look_from;
   m_w = normalize(gaze);
@@ -25,7 +25,7 @@ Camera::Camera(std::unique_ptr<Film> film, const ParamSet& camera_ps, const Para
   m_v = normalize(cross(m_u, m_w));
   m_eye = look_from;
 
-  // [3] Determine the screen window bounds (left, right, bottom, top)
+  // Determine the screen window bounds (left, right, bottom, top)
   auto screen_window_str = camera_ps.retrieve<std::string>("screen_window", "");
   if (!screen_window_str.empty()) {
     // If provided directly as a string, parse the 4 coordinates.

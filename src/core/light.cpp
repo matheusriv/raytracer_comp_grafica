@@ -39,4 +39,44 @@ RGBColor AmbientLight::sample_Li(const Surfel& hit, Vector3f* wi, VisibilityTest
   return I;
 }
 
+SpotLight::SpotLight(const Point3f& p, const Point3f& to, const RGBColor& I, float cutoff_deg, float falloff_deg)
+    : Light(light_flag_e::spot), pLight(p), dir(normalize(to - p)), I(I) {
+  // Convert angles from degrees to radians.
+  cutoff_rad = cutoff_deg * M_PI / 180.0f;
+  falloff_rad = falloff_deg * M_PI / 180.0f;
+  
+  // Precompute cosines for faster comparison during ray tracing.
+  cos_cutoff = std::cos(cutoff_rad);
+  cos_falloff = std::cos(falloff_rad);
+}
+
+RGBColor SpotLight::sample_Li(const Surfel& hit, Vector3f* wi, VisibilityTester* vis) {
+  // Calculate the normalized direction vector from the hit point towards the light source.
+  *wi = normalize(pLight - hit.p);
+  if (vis) { vis->p0 = hit.p + normalize(hit.n) * 0.05f; vis->p1 = pLight; }
+
+  // Calculate the cosine of the angle between the spotlight's main direction 
+  // and the vector pointing from the light source to the hit point.
+  float cos_theta = dot(*wi * -1.0f, dir);
+  
+  // If the angle is greater than the cutoff angle (i.e., its cosine is smaller),
+  // the point is completely outside the spotlight's cone of influence.
+  if (cos_theta < cos_cutoff) {
+    return color_black;
+  }
+
+  // Default weight is 1.0 (full intensity), applied if the point is inside the inner falloff cone.
+  float weight = 1.0f;
+  
+  // If the point is in the transition zone (penumbra) between the falloff and cutoff cones:
+  if (cos_theta < cos_falloff && std::abs(cos_falloff - cos_cutoff) > 1e-5f) {
+    // Calculate a linear interpolation factor delta (0.0 at the cutoff edge, 1.0 at the falloff edge).
+    float delta = (cos_theta - cos_cutoff) / (cos_falloff - cos_cutoff);
+    // Apply a cubic curve (delta^3) for a smoother and faster intensity decay towards the edge.
+    weight = delta * delta * delta;
+  }
+
+  return I * weight;
+}
+
 } // namespace ryt

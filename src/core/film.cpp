@@ -45,11 +45,23 @@ void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
 
 /// Writes the accumulated pixel data to a file using the configured image format (PPM or PNG).
 void Film::write_image() const {
+  std::vector<RGBColor> output_pixels = m_pixels;
+  
+  // Aplica a correção de gama aos pixels antes de salvar
+  if (m_activate_gamma_correction) {
+    float inv_gamma = 1.0f / 2.2f;
+    for (auto& color : output_pixels) {
+      color.x = std::pow(color.x, inv_gamma);
+      color.y = std::pow(color.y, inv_gamma);
+      color.z = std::pow(color.z, inv_gamma);
+    }
+  }
+
   if (m_image_type == image_type_e::PPM3 || m_image_type == image_type_e::PPM6) {
     bool ascii = (m_image_type == image_type_e::PPM3);
-    write_ppm(m_filename, m_pixels, m_full_resolution.x, m_full_resolution.y, ascii);
+    write_ppm(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y, ascii);
   } else if (m_image_type == image_type_e::PNG) {
-    write_png(m_filename, m_pixels, m_full_resolution.x, m_full_resolution.y);
+    write_png(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y);
   } else {
     std::cerr << "Image format not supported." << std::endl;
   }
@@ -119,16 +131,16 @@ Film* create_film(const ParamSet& ps) {
 #ifdef DEBUG
   std::cout << ">>> Inside create_film()\n";
 #endif
-  // [1] Choose the filename.
+  // Choose the filename.
   auto filename = handles_filename(ps);
 
-  // [2] Define the crop window information.
+  // Define the crop window information.
   // auto crop_window = handles_cropwindow(ps);
 
-  // [3] Retrieve film dimensions and handles quick_render option.
+  // Retrieve film dimensions and handles quick_render option.
   Point2i dimensions = handles_dimensions(ps);
 
-  // [4] Retrieve film type.
+  // Retrieve film type.
   std::unordered_map<std::string, Film::image_type_e> image_type{
     { "png", Film::image_type_e::PNG },
     { "ppm3", Film::image_type_e::PPM3 },
@@ -137,7 +149,7 @@ Film* create_film(const ParamSet& ps) {
   };
   auto type{ image_type[ps.retrieve<std::string>("img_type", "png")] };
 
-  // [5] Get gamma correction request.
+  // Get gamma correction request.
   bool apply_gamma_correction = ps.retrieve<bool>("gamma_corrected", false);
 
 #ifdef DEBUG

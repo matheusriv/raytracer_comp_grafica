@@ -34,7 +34,7 @@ public:
   Film(const Point2i& resolution,
        const std::string& filename,
        image_type_e image_type,
-       bool gamma_corrected = false);
+       bool gamma_corrected);
   virtual ~Film();
 
   /// Retrieves the original film resolution.

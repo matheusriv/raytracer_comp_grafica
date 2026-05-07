@@ -150,19 +150,21 @@ void App::material(const ParamSet& ps) {
     auto kd = ps.retrieve<RGBColor>("diffuse", RGBColor{0.5f, 0.5f, 0.5f});
     auto ks = ps.retrieve<RGBColor>("specular", RGBColor{1.0f, 1.0f, 1.0f});
     auto g = ps.retrieve<real_type>("glossiness", 256.0f);
+    auto mirror = ps.retrieve<RGBColor>("mirror", color_black);
 
     if (ka.r > 1.0f || ka.g > 1.0f || ka.b > 1.0f) ka = ka / 255.0f;
     if (kd.r > 1.0f || kd.g > 1.0f || kd.b > 1.0f) kd = kd / 255.0f;
     if (ks.r > 1.0f || ks.g > 1.0f || ks.b > 1.0f) ks = ks / 255.0f;
+    if (mirror.r > 1.0f || mirror.g > 1.0f || mirror.b > 1.0f) mirror = mirror / 255.0f;
 
-    m_render_options->current_material = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g);
+    m_render_options->current_material = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g, mirror);
   }
 }
 
 void App::light_source(const ParamSet& ps) {
   check_in_world_block_state("App::light_source()");
   auto type = ps.retrieve<std::string>("type", "point");
-  auto I = ps.retrieve<RGBColor>("I", RGBColor{1.0f, 1.0f, 1.0f});
+  auto I = ps.retrieve<RGBColor>("i", RGBColor{1.0f, 1.0f, 1.0f});
   auto scale = ps.retrieve<Vector3f>("scale", Vector3f{1.0f, 1.0f, 1.0f});
   
   RGBColor final_I = RGBColor{I.r * scale.x, I.g * scale.y, I.b * scale.z};
@@ -177,6 +179,12 @@ void App::light_source(const ParamSet& ps) {
   } else if (type == "point") {
     auto from = ps.retrieve<Point3f>("from", Point3f{0.0f, 0.0f, 0.0f});
     m_render_options->lights.push_back(std::make_shared<PointLight>(from, final_I));
+  } else if (type == "spot") {
+    auto from = ps.retrieve<Point3f>("from", Point3f{0.0f, 0.0f, 0.0f});
+    auto to = ps.retrieve<Point3f>("to", Point3f{0.0f, 0.0f, -1.0f});
+    auto cutoff = ps.retrieve<real_type>("cutoff", 30.0f);
+    auto falloff = ps.retrieve<real_type>("falloff", 15.0f);
+    m_render_options->lights.push_back(std::make_shared<SpotLight>(from, to, final_I, cutoff, falloff));
   }
 }
 
@@ -200,12 +208,14 @@ void App::make_named_material(const ParamSet& ps) {
     auto kd = ps.retrieve<RGBColor>("diffuse", RGBColor{0.5f, 0.5f, 0.5f});
     auto ks = ps.retrieve<RGBColor>("specular", RGBColor{1.0f, 1.0f, 1.0f});
     auto g = ps.retrieve<real_type>("glossiness", 256.0f);
+    auto mirror = ps.retrieve<RGBColor>("mirror", color_black);
 
     if (ka.r > 1.0f || ka.g > 1.0f || ka.b > 1.0f) ka = ka / 255.0f;
     if (kd.r > 1.0f || kd.g > 1.0f || kd.b > 1.0f) kd = kd / 255.0f;
     if (ks.r > 1.0f || ks.g > 1.0f || ks.b > 1.0f) ks = ks / 255.0f;
+    if (mirror.r > 1.0f || mirror.g > 1.0f || mirror.b > 1.0f) mirror = mirror / 255.0f;
 
-    m_render_options->named_materials[name] = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g);
+    m_render_options->named_materials[name] = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g, mirror);
   }
 }
 

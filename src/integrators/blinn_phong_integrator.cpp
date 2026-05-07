@@ -6,7 +6,7 @@
 
 namespace ryt {
 
-std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& scene) const {
+std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& scene, int depth) const {
   Surfel sf;
   if (!scene.intersect(ray, &sf)) {
     return std::nullopt;
@@ -51,6 +51,19 @@ std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& s
         L.g += I.g * (blinn_mat->kd.g * ndotl + blinn_mat->ks.g * spec_term);
         L.b += I.b * (blinn_mat->kd.b * ndotl + blinn_mat->ks.b * spec_term);
       }
+    }
+
+    if (blinn_mat->mirror != color_black && depth < max_depth) {
+      /*Vector3f reflected_dir = ray.d - 2.0f * dot(ray.d, n) * n;
+      reflected_dir = normalize(reflected_dir);
+      Rayf reflected_ray(sf.p + n * 0.05f, reflected_dir); // Offset by an epsilon
+
+      auto L_refl = Li(reflected_ray, scene, depth + 1);
+      if (L_refl.has_value()) {
+        L.r += blinn_mat->mirror.r * L_refl.value().r;
+        L.g += blinn_mat->mirror.g * L_refl.value().g;
+        L.b += blinn_mat->mirror.b * L_refl.value().b;
+      }*/
     }
   } else if (mat) {
     L = mat->color();
