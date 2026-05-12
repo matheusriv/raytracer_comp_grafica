@@ -45,7 +45,10 @@ std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& s
       if (ndotl > 0.0f && vis.unoccluded(scene)) {
         Vector3f h = normalize(v + l); // Half-vector
         float ndoth = std::max(0.0f, dot(n, h));
-        float spec_term = std::pow(ndoth, blinn_mat->glossiness);
+        float spec_term = 0.0f;
+        if (blinn_mat->glossiness > 0.0f) {
+          spec_term = std::pow(ndoth, blinn_mat->glossiness);
+        }
 
         L.r += I.r * (blinn_mat->kd.r * ndotl + blinn_mat->ks.r * spec_term);
         L.g += I.g * (blinn_mat->kd.g * ndotl + blinn_mat->ks.g * spec_term);

@@ -105,7 +105,7 @@ void App::background(const ParamSet& ps) {
   }
 
   if (m_current_run_options.verbose) {
-    std::cout << ">>> Parâmetros de background:\n"
+    std::cout << ">>> Background parameters:\n"
             << "    - type: " << type << "\n";
     if (type == "single_color") {
       auto color = ps.retrieve<RGBColor>("color", color_black);
@@ -278,7 +278,7 @@ Camera* App::make_camera(const ParamSet& camera_ps, const ParamSet& film_ps) {
   }
   
   if(m_current_run_options.verbose){
-    std::cout << ">>> Parâmetros armazenados em film_ps:\n"
+    std::cout << ">>> Parameters stored in film_ps:\n"
             << "    - type: " << film_ps.retrieve<std::string>("type", "") << "\n"
             << "    - filename: " << film_ps.retrieve<std::string>("filename", "output") << "\n"
             << "    - img_type: " << film_ps.retrieve<std::string>("img_type", "png") << "\n"

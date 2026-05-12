@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 #include "../../msg_system/error.hpp"
@@ -12,6 +13,9 @@
 #include "image_io.hpp"
 #include "paramset.hpp"
 #include <string_view>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 namespace ryt {
 
@@ -47,7 +51,7 @@ void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
 void Film::write_image() const {
   std::vector<RGBColor> output_pixels = m_pixels;
   
-  // Aplica a correção de gama aos pixels antes de salvar
+  // Apply gamma correction to the pixels before saving
   if (m_activate_gamma_correction) {
     float inv_gamma = 1.0f / 2.2f;
     for (auto& color : output_pixels) {
@@ -57,13 +61,20 @@ void Film::write_image() const {
     }
   }
 
+  bool saved = false;
   if (m_image_type == image_type_e::PPM3 || m_image_type == image_type_e::PPM6) {
     bool ascii = (m_image_type == image_type_e::PPM3);
     write_ppm(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y, ascii);
+    saved = true;
   } else if (m_image_type == image_type_e::PNG) {
     write_png(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y);
+    saved = true;
   } else {
     std::cerr << "Image format not supported." << std::endl;
+  }
+
+  if (saved) {
+    std::cout << "\n" << m_filename << " saved!\n" << std::endl;
   }
 }
 
@@ -74,9 +85,12 @@ void Film::write_image() const {
 /// Chooses and constructs the correct output filename based on CLI arguments and the scene file parameters.
 std::string handles_filename(const ParamSet& ps) {
   std::string filename;
+  bool from_cli = false;
+
   // If the user provided an output file via CLI, it takes priority.
   if (!App::m_current_run_options.outfile.empty()) {
     filename = App::m_current_run_options.outfile;
+    from_cli = true;
   } else {
     // Otherwise, retrieve from the scene file (XML)
     filename = ps.retrieve<std::string>("filename", "output");
@@ -98,6 +112,16 @@ std::string handles_filename(const ParamSet& ps) {
   // save it by default in the results/ directory
   if (filename.find('/') == std::string::npos && filename.find('\\') == std::string::npos) {
     filename = "../results/" + filename;
+  } else if (!from_cli) {
+    // If it contains a slash (e.g. "./output") and didn't come from the CLI, we resolve the relative path
+    // starting from the directory of the original XML scene file itself.
+    fs::path path_obj(filename);
+    if (path_obj.is_relative()) {
+      fs::path xml_dir = fs::path(App::m_current_run_options.filename).parent_path();
+      if (!xml_dir.empty()) {
+        filename = (xml_dir / path_obj).lexically_normal().generic_string();
+      }
+    }
   }
 
   return filename;

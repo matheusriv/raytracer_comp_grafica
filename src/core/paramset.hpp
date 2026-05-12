@@ -110,7 +110,7 @@ public:
   }
 
   /*!
-   * Permite imprimir as chaves (nomes dos atributos) armazenadas no ParamSet.
+   * Allows printing the keys (attribute names) stored in the ParamSet.
    */
   friend std::ostream& operator<<(std::ostream& os, const ParamSet& ps) {
     os << "{ ";

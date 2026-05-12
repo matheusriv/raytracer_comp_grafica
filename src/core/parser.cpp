@@ -257,6 +257,12 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "falloff"
     }
   },
+  {
+    "include",
+    {
+      "filename",
+    }
+  },
 };
 
 
@@ -384,6 +390,9 @@ void parse_attribute(const std::string& attr_name /* IN value */,
  * This is the entry point where the parsing of the scene file begins.
  */
 void parse_scene_file(const char* filename) {
+  // Get the base directory of the current XML file to resolve relative paths
+  fs::path base_path = fs::path{ filename }.parent_path();
+
   // Load document.
   tinyxml2::XMLDocument doc;
   if (doc.LoadFile(filename) != tinyxml2::XML_SUCCESS) {
@@ -442,18 +451,22 @@ void parse_scene_file(const char* filename) {
     /// HACK: If the tag is `include` we call `parse_scene_file()` recursively.
     // ----------------------------------------------------------------------------
     if (tag_name == "include") {
-      auto filename = ps.retrieve<std::string>("filename", "");
-      if (filename.empty()) {
+      auto include_filename = ps.retrieve<std::string>("filename", "");
+      if (include_filename.empty()) {
         WARNING("Missing attribute \"filename\" in tag \"include\"");
         continue;
       }
-      if (not fs::exists(fs::path{ filename.c_str() })) {
+      
+      fs::path full_path = base_path / include_filename;
+      std::string full_path_str = full_path.string();
+      
+      if (not fs::exists(full_path)) {
         std::ostringstream oss;
-        oss << "Included file " << std::quoted(filename) << " does not exist.";
+        oss << "Included file " << std::quoted(full_path_str) << " does not exist.";
         ERROR(oss.str());
       }
       // Recursive call to process subfile.
-      parse_scene_file(filename.c_str());
+      parse_scene_file(full_path_str.c_str());
       continue;  // This tag doesn't have an API function associated with; get next tag.
     }
     // ============================================================================
