@@ -1,4 +1,4 @@
-#include "blinn_phong_integrator.hpp"
+#include "integrator.hpp"
 #include "../core/surfel.hpp"
 #include "../core/blinn_material.hpp"
 #include "../core/App.hpp"
@@ -54,7 +54,7 @@ std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& s
     }
 
     if (blinn_mat->mirror != color_black && depth < max_depth) {
-      /*Vector3f reflected_dir = ray.d - 2.0f * dot(ray.d, n) * n;
+      Vector3f reflected_dir = ray.d - 2.0f * dot(ray.d, n) * n;
       reflected_dir = normalize(reflected_dir);
       Rayf reflected_ray(sf.p + n * 0.05f, reflected_dir); // Offset by an epsilon
 
@@ -63,7 +63,7 @@ std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& s
         L.r += blinn_mat->mirror.r * L_refl.value().r;
         L.g += blinn_mat->mirror.g * L_refl.value().g;
         L.b += blinn_mat->mirror.b * L_refl.value().b;
-      }*/
+      }
     }
   } else if (mat) {
     L = mat->color();

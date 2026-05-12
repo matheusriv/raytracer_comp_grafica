@@ -9,9 +9,10 @@ set(SOURCES
     src/core/main.cpp
     src/core/App.cpp
     src/integrators/integrator.cpp
-    src/integrators/raycast_integrator.cpp
-    src/integrators/normal_map_integrator.cpp
-    src/integrators/blinn_phong_integrator.cpp
+    src/integrators/FlatIntegrator.cpp
+    src/integrators/NormalMapIntegrator.cpp
+    src/integrators/BlinnPhongIntegrator.cpp
+    src/integrators/SamplerIntegrator.cpp
     src/core/background.cpp
     src/core/camera.cpp
     src/core/film.cpp

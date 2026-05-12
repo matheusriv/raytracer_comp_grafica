@@ -1,4 +1,4 @@
-#include "normal_map_integrator.hpp"
+#include "integrator.hpp"
 #include "../core/surfel.hpp"
 #include "../core/geometry.hpp"
 

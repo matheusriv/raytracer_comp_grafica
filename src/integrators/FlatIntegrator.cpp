@@ -1,9 +1,9 @@
-#include "raycast_integrator.hpp"
+#include "integrator.hpp"
 #include "../core/surfel.hpp"
 
 namespace ryt {
 
-std::optional<RGBColor> RayCastIntegrator::Li(const Rayf& ray, const Scene& scene, int depth) const {
+std::optional<RGBColor> FlatIntegrator::Li(const Rayf& ray, const Scene& scene, int depth) const {
   Surfel sf;
   if (!scene.intersect(ray, &sf)) {
     return std::nullopt; // Missed the scene geometry, fallback to background.
