@@ -1,0 +1,8 @@
+<RT3>
+    <lookat look_from="0 7 -10" look_at="0 1 1" up="0 1 0" />
+    <camera type="perspective" fovy="45" />
+    <integrator type="blinn_phong" depth="2" />
+
+    <film type="image" x_res="800" y_res="600" filename="three_spheres_plane_proj07.png" img_type="png" gamma_corrected="no" />
+    <include filename="geometry.xml" />
+</RT3>

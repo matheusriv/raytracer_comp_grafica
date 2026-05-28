@@ -52,7 +52,27 @@ bool convert(const std::string& attr_name, const std::string& attr_content, ryt:
   while (input_string_still_has_values and not iss.eof()) {
     // Slightly different treatment if T is bool
     if constexpr (std::is_same_v<T, bool>) {
-      iss >> std::boolalpha >> single_value;  // Use std::boolalpha to read "true" ou "false"
+      std::string token;
+      iss >> token;
+      if (iss.fail()) {
+        if (multiple_values.empty()) {
+          return false;
+        }
+        input_string_still_has_values = false;
+        break;
+      }
+      std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+      if (token == "true" || token == "1" || token == "on" || token == "yes") {
+        single_value = true;
+      } else if (token == "false" || token == "0" || token == "off" || token == "no") {
+        single_value = false;
+      } else {
+        if (multiple_values.empty()) {
+          return false;
+        }
+        input_string_still_has_values = false;
+        break;
+      }
     } else {
       iss >> single_value;  // Regular extraction.
     }
@@ -232,6 +252,15 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     "object",
     {
       "type",
+      "filename",
+      "ntriangles",
+      "indices",
+      "vertices",
+      "normals",
+      "uv",
+      "reverse_vertex_order",
+      "compute_normals",
+      "backface_cull",
       "radius",
       "center",
       "material",
@@ -250,6 +279,7 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     {
       "type",
       "i",
+      "l",
       "scale",
       "from",
       "to",
@@ -320,10 +350,20 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "look_at", convert<ryt::Point3f, 3> },
   { "up", convert<ryt::Vector3f, 3> },
   // Object attributes
+  { "filename", convert<std::string> },
+  { "ntriangles", convert<int> },
+  { "indices", convert<int> },
+  { "vertices", convert<ryt::Point3f, 3> },
+  { "normals", convert<ryt::Normal3f, 3> },
+  { "uv", convert<ryt::Point2f, 2> },
+  { "reverse_vertex_order", convert<bool> },
+  { "compute_normals", convert<bool> },
+  { "backface_cull", convert<bool> },
   { "radius", convert<ryt::real_type> },
   { "center", convert<ryt::Point3f, 3> },
   // Light attributes
   { "i", convert<ryt::RGBColor, 3> },
+  { "l", convert<ryt::RGBColor, 3> },
   { "scale", convert<ryt::Vector3f, 3> },
   { "from", convert<ryt::Point3f, 3> },
   { "to", convert<ryt::Point3f, 3> },
@@ -484,6 +524,16 @@ void parse_scene_file(const char* filename) {
       std::ostringstream oss;
       oss << "<<<<< Calling API function for the tag " << std::quoted(tag_name) << ".\n";
       MESSAGE(oss.str());
+    }
+    if (tag_name == "object") {
+      std::string filename = ps.retrieve<std::string>("filename", "");
+      if (!filename.empty()) {
+        fs::path path_obj(filename);
+        if (path_obj.is_relative()) {
+          filename = (base_path / path_obj).lexically_normal().generic_string();
+          ps.assign("filename", filename);
+        }
+      }
     }
     // Call the api function associated with the tag name.
     api_functions[tag_name](ps);

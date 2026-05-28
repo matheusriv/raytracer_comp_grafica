@@ -368,6 +368,11 @@ Vector3<T> operator-(const Vector3<T>& v1, const Vector3<T>& v2) {
   return Vector3<T>(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 }
 
+template <typename T>
+Vector3<T> operator-(const Vector3<T>& v) {
+  return Vector3<T>(-v.x, -v.y, -v.z);
+}
+
 template <typename T, typename U>
 Vector3<T> operator*(U s, const Vector3<T>& v) {
   return Vector3<T>(s * v.x, s * v.y, s * v.z);

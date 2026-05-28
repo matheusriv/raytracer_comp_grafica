@@ -17,13 +17,17 @@ set(SOURCES
     src/core/camera.cpp
     src/core/film.cpp
     src/core/image_io.cpp
+    src/core/triangle.cpp
     src/core/parser.cpp
     src/core/primitive.cpp
     src/core/sphere.cpp
     src/core/light.cpp
     msg_system/error.cpp
     lib_tinyxml2/tinyxml2.cpp
+    lib_tinyobjloader/tiny_obj_loader.cc
 )
+
+include_directories(${CMAKE_SOURCE_DIR}/lib_tinyobjloader)
 
 # Cria o executável
 add_executable(raytmath ${SOURCES})

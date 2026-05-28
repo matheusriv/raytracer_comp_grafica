@@ -16,6 +16,7 @@
 #include "material.hpp"
 #include "primitive.hpp"
 #include "sphere.hpp"
+#include "triangle.hpp"
 #include "paramset.hpp"
 #include "parser.hpp"
 #include "scene.hpp"
@@ -256,6 +257,12 @@ void App::object(const ParamSet& ps) {
     Shape* shape = create_sphere(ps);
     GeometricPrimitive* prim = new GeometricPrimitive(std::shared_ptr<Shape>(shape), mat);
     m_render_options->primitives.push_back(std::shared_ptr<Primitive>(prim));
+  } else if (type == "trianglemesh") {
+    auto shapes = create_triangle_mesh_shape(ps);
+    for (auto& shape : shapes) {
+      auto prim = std::make_shared<GeometricPrimitive>(shape, mat);
+      m_render_options->primitives.push_back(prim);
+    }
   }
 }
 

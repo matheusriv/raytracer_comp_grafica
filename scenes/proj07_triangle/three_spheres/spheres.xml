@@ -1,0 +1,29 @@
+<RT3>
+
+        <identity />
+        <named_material name="redish"/>
+        <translate value="0 1.0 1" />
+        <object type="sphere" radius="1" />
+
+        <identity />
+        <named_material name="greenish"/>
+        <translate value="-2 1.0 -2" />
+        <object type="sphere" radius="1" />
+
+        <identity />
+        <named_material name="gold"/>
+        <translate value="2 1.0 -2" />
+        <object type="sphere" radius="1" />
+
+        <identity />
+            <named_material name="grey"/>
+            <!-- [> <translate value="0 -3.7 4" /> <] -->
+            <object type="trianglemesh" material="grey"
+                ntriangles ="2"
+                vertices ="-4 0 4  4 0 4  4 0 -4  -4 0 -4"
+                indices ="0 1 2   0 2 3"
+                normals ="0 1 0  0 1 0  0 1 0  0 1 0 "
+                reverse_vertex_order="false"
+                backface_cull ="off"/>
+
+</RT3>
