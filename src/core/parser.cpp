@@ -267,6 +267,14 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "flip_normals",
     },
   },
+  /*{
+    "accelerator",
+    {
+      "type",
+      "split_method",
+      "max_prims_per_node"
+    },
+  },*/
   {
     "integrator",
     {
@@ -308,6 +316,7 @@ std::unordered_map<std::string, std::function<void(const ryt::ParamSet&)>> api_f
   { "make_named_material", ryt::App::make_named_material },
   { "named_material", ryt::App::named_material },
   { "integrator", ryt::App::integrator },
+  { "accelerator", ryt::App::accelerator },
   { "object", ryt::App::object },
   { "light_source", ryt::App::light_source },
 };
@@ -328,6 +337,8 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "glossiness", convert<ryt::real_type> },
   { "mirror", convert<ryt::RGBColor, 3> },
   { "depth", convert<int> },
+  { "split_method", convert<std::string> },
+  { "max_prims_per_node", convert<int> },
   // Background attributes.
   { "mapping", convert<std::string> },
   { "bl", convert<ryt::RGBColor, 3> },

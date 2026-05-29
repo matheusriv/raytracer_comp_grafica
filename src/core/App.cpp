@@ -266,6 +266,11 @@ void App::object(const ParamSet& ps) {
   }
 }
 
+void App::accelerator(const ParamSet& ps) {
+  check_in_setup_block_state("App::accelerator()");
+  m_render_options->actors["accelerator"] = ps;
+}
+
 void App::world_begin(const ParamSet& ps) {
   check_in_setup_block_state("App::world_begin()");
   m_current_block_state = AppState::WorldBlock;  // correct machine state.
@@ -341,7 +346,19 @@ void App::world_end(const ParamSet& ps) {
   // The scene has already been parsed and properly set up. It's time to render the scene.
   
   // Create scene (with background and all collected primitives)
-  auto aggregate = std::make_shared<PrimList>(std::move(m_render_options->primitives));
+  std::shared_ptr<Primitive> aggregate;
+  auto accel_it = m_render_options->actors.find("accelerator");
+  if (accel_it != m_render_options->actors.end()) {
+    auto accel_type = accel_it->second.retrieve<std::string>("type", "");
+    if (accel_type == "bvh") {
+      auto split_method = accel_it->second.retrieve<std::string>("split_method", "middle");
+      auto max_prims = accel_it->second.retrieve<int>("max_prims_per_node", 4);
+      aggregate = std::make_shared<BVHAccel>(std::move(m_render_options->primitives), max_prims, split_method);
+    }
+  }
+  if (!aggregate) {
+    aggregate = std::make_shared<PrimList>(std::move(m_render_options->primitives));
+  }
   m_render_options->scene = std::make_unique<Scene>(
       std::move(m_render_options->background),
       aggregate);

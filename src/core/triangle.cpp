@@ -403,8 +403,8 @@ std::vector<std::shared_ptr<Shape>> create_triangle_mesh(std::shared_ptr<Triangl
 }
 
 std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps) {
-  bool reverse_vertex_order = ps.retrieve<bool>("reverse_vertex_order", false);
-  bool compute_normals_flag = ps.retrieve<bool>("compute_normals", false);
+  bool reverse_vertex_order = ps.retrieve<bool>("reverse_vertex_order", true);
+  bool compute_normals_flag = ps.retrieve<bool>("compute_normals", true);
   bool backface_cull = ps.retrieve<bool>("backface_cull", true);
 
   auto mesh = std::make_shared<TriangleMesh>();

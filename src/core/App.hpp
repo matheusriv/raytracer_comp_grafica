@@ -112,6 +112,7 @@ public:
   static void named_material(const ParamSet& ps);
   static void integrator(const ParamSet& ps);
   static void object(const ParamSet& ps);
+  static void accelerator(const ParamSet& ps);
   static void light_source(const ParamSet& ps);
   static void world_begin(const ParamSet& ps);
   static void world_end(const ParamSet& ps);
