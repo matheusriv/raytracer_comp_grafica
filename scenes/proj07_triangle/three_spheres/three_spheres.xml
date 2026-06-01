@@ -1,5 +1,4 @@
 <RT3>
-    <!-- Look from ABOVE the plane -->
     <lookat look_from="8 -11 -9" look_at="0 1 0" up="0 1 0" /> 
     <camera type="perspective" fovy="45" />
     <integrator type="blinn_phong" depth="2" />

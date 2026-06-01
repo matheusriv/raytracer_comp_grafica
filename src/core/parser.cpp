@@ -257,6 +257,7 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "vertex_indices",
       "vertices",
       "normals",
+      "normal_indices",
       "uv",
       "reverse_vertex_order",
       "compute_normals",
@@ -267,14 +268,14 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "flip_normals",
     },
   },
-  /*{
+  {
     "accelerator",
     {
       "type",
       "split_method",
       "max_prims_per_node"
     },
-  },*/
+  },
   {
     "integrator",
     {
@@ -366,6 +367,7 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "vertex_indices", convert<int> },
   { "vertices", convert<ryt::Point3f, 3> },
   { "normals", convert<ryt::Normal3f, 3> },
+  { "normal_indices", convert<int> },
   { "uv", convert<ryt::Point2f, 2> },
   { "reverse_vertex_order", convert<bool> },
   { "compute_normals", convert<bool> },

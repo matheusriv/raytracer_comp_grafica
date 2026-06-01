@@ -312,6 +312,7 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
   auto indices = ps.retrieve<std::vector<int>>("vertex_indices", {});
   auto vertices = ps.retrieve<std::vector<Point3f>>("vertices", {});
   auto normals = ps.retrieve<std::vector<Normal3f>>("normals", {});
+  auto normal_indices = ps.retrieve<std::vector<int>>("normal_indices", {});
   auto uvcoords = ps.retrieve<std::vector<Point2f>>("uv", {});
 
   if (indices.empty() || static_cast<int>(indices.size()) != ntriangles * 3) {
@@ -331,7 +332,13 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
 
   if (!normals.empty()) {
     mesh->normals = std::move(normals);
-    if (static_cast<int>(mesh->normals.size()) == static_cast<int>(mesh->vertices.size())) {
+    if (!normal_indices.empty()) {
+      if (static_cast<int>(normal_indices.size()) != ntriangles * 3) {
+        std::cerr << "trianglemesh requires exactly 3*ntriangles normal_indices" << '\n';
+        return false;
+      }
+      mesh->normal_indices = std::move(normal_indices);
+    } else if (static_cast<int>(mesh->normals.size()) == static_cast<int>(mesh->vertices.size())) {
       for (int idx = 0; idx < ntriangles * 3; ++idx) {
         mesh->normal_indices[idx] = mesh->vertex_indices[idx];
       }
@@ -404,7 +411,7 @@ std::vector<std::shared_ptr<Shape>> create_triangle_mesh(std::shared_ptr<Triangl
 
 std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps) {
   bool reverse_vertex_order = ps.retrieve<bool>("reverse_vertex_order", true);
-  bool compute_normals_flag = ps.retrieve<bool>("compute_normals", true);
+  bool compute_normals_flag = ps.retrieve<bool>("compute_normals", false);
   bool backface_cull = ps.retrieve<bool>("backface_cull", true);
 
   auto mesh = std::make_shared<TriangleMesh>();
