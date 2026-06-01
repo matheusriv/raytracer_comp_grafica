@@ -21,7 +21,7 @@
         <object type="trianglemesh"
                 ntriangles ="2"
                 vertices="-30 30.5 -1  30 30.5 -1  30 -30.5 -1  -30 -30.5 -1"
-                indices ="0 1 2   0 2 3"
+                vertex_indices ="0 1 2   0 2 3"
                 normals ="0 0 1  0 0 1  0 0 1  0 0 1 "
                 reverse_vertex_order="false"
                 backface_cull ="off"/>

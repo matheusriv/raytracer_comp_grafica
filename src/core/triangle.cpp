@@ -309,13 +309,13 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
     return false;
   }
 
-  auto indices = ps.retrieve<std::vector<int>>("indices", {});
+  auto indices = ps.retrieve<std::vector<int>>("vertex_indices", {});
   auto vertices = ps.retrieve<std::vector<Point3f>>("vertices", {});
   auto normals = ps.retrieve<std::vector<Normal3f>>("normals", {});
   auto uvcoords = ps.retrieve<std::vector<Point2f>>("uv", {});
 
   if (indices.empty() || static_cast<int>(indices.size()) != ntriangles * 3) {
-    std::cerr << "trianglemesh requires exactly 3*ntriangles indices" << '\n';
+    std::cerr << "trianglemesh requires exactly 3*ntriangles vertex_indices" << '\n';
     return false;
   }
   if (vertices.empty()) {

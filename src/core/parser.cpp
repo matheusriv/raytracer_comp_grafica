@@ -254,7 +254,7 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "type",
       "filename",
       "ntriangles",
-      "indices",
+      "vertex_indices",
       "vertices",
       "normals",
       "uv",
@@ -363,7 +363,7 @@ std::unordered_map<std::string, ConverterFunction> converters{
   // Object attributes
   { "filename", convert<std::string> },
   { "ntriangles", convert<int> },
-  { "indices", convert<int> },
+  { "vertex_indices", convert<int> },
   { "vertices", convert<ryt::Point3f, 3> },
   { "normals", convert<ryt::Normal3f, 3> },
   { "uv", convert<ryt::Point2f, 2> },
