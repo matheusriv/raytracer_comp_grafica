@@ -31,7 +31,12 @@ Bounds3f Triangle::world_bounds() const {
   const Point3f& p0 = mesh->vertices[v[0]];
   const Point3f& p1 = mesh->vertices[v[1]];
   const Point3f& p2 = mesh->vertices[v[2]];
-  return Bounds3f(min(min(p0, p1), p2), max(max(p0, p1), p2));
+  Point3f pmin = min(min(p0, p1), p2);
+  Point3f pmax = max(max(p0, p1), p2);
+  
+  const float epsilon = 1e-4f;
+  return Bounds3f(Point3f{pmin[0] - epsilon, pmin[1] - epsilon, pmin[2] - epsilon},
+                  Point3f{pmax[0] + epsilon, pmax[1] + epsilon, pmax[2] + epsilon});
 }
 
 bool Triangle::intersect_p(const Rayf& r) const {
