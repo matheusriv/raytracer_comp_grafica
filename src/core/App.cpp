@@ -266,9 +266,13 @@ void App::object(const ParamSet& ps) {
   }
 }
 
-void App::accelerator(const ParamSet& ps) {
-  check_in_setup_block_state("App::accelerator()");
-  m_render_options->actors["accelerator"] = ps;
+void App::aggregator(const ParamSet& ps) {
+  check_in_setup_block_state("App::aggregator()");
+  m_render_options->actors["aggregator"] = ps;
+  if (m_current_run_options.verbose) {
+    auto type = ps.retrieve<std::string>("type", "bvh");
+    std::cout << ">>> aggregator type: " << std::quoted(type) << '\n';
+  }
 }
 
 void App::world_begin(const ParamSet& ps) {
@@ -280,7 +284,13 @@ void App::world_begin(const ParamSet& ps) {
 /// Erase temporary engine states so that we may render another scene with the same configuration.
 void App::hard_engine_reset() {
   // Render options reset
-  // TODO: in the future.
+  if (m_render_options) {
+    m_render_options->primitives.clear();
+    m_render_options->lights.clear();
+    m_render_options->named_materials.clear();
+    m_render_options->current_material.reset();
+    m_render_options->ambient_light.reset();
+  }
 }
 
 Camera* App::make_camera(const ParamSet& camera_ps, const ParamSet& film_ps) {
@@ -347,13 +357,16 @@ void App::world_end(const ParamSet& ps) {
   
   // Create scene (with background and all collected primitives)
   std::shared_ptr<Primitive> aggregate;
-  auto accel_it = m_render_options->actors.find("accelerator");
-  if (accel_it != m_render_options->actors.end()) {
-    auto accel_type = accel_it->second.retrieve<std::string>("type", "");
-    if (accel_type == "bvh") {
-      auto split_method = accel_it->second.retrieve<std::string>("split_method", "middle");
-      auto max_prims = accel_it->second.retrieve<int>("max_prims_per_node", 4);
-      aggregate = std::make_shared<BVHAccel>(std::move(m_render_options->primitives), max_prims, split_method);
+  if (m_render_options->actors.count("aggregator")) {
+    const auto& ps = m_render_options->actors.at("aggregator");
+    auto agg_type = ps.retrieve<std::string>("type", "bvh");
+    if (agg_type == "bvh") {
+      aggregate = std::make_shared<BVHAccel>(
+          std::move(m_render_options->primitives),
+          ps.retrieve<int>("max_prims_per_node", 4),
+          ps.retrieve<std::string>("split_method", "middle"));
+    } else if (agg_type != "list") {
+      WARNING("Unknown aggregator type \"" + agg_type + "\". Falling back to \"list\".");
     }
   }
   if (!aggregate) {

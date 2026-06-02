@@ -269,7 +269,7 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     },
   },
   {
-    "accelerator",
+    "aggregator",
     {
       "type",
       "split_method",
@@ -317,7 +317,7 @@ std::unordered_map<std::string, std::function<void(const ryt::ParamSet&)>> api_f
   { "make_named_material", ryt::App::make_named_material },
   { "named_material", ryt::App::named_material },
   { "integrator", ryt::App::integrator },
-  { "accelerator", ryt::App::accelerator },
+  { "aggregator", ryt::App::aggregator },
   { "object", ryt::App::object },
   { "light_source", ryt::App::light_source },
 };

@@ -13,9 +13,18 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <vector>
+#include <type_traits>
 #include "common.hpp"
 
 namespace ryt{ 
+
+template <typename T>
+struct is_vector : std::false_type {};
+template <typename T, typename A>
+struct is_vector<std::vector<T, A>> : std::true_type {};
+template <typename T>
+inline constexpr bool is_vector_v = is_vector<T>::value;
 
 class GenericType {
 public:
@@ -82,6 +91,22 @@ public:
       auto& data = dynamic_cast<ValueType<T>&>(*sptr);
       return data.m_value;  // Finally, return the stored value.
     } catch (const std::bad_cast& e) {
+      if constexpr (is_vector_v<T>) {
+        using ElementType = typename T::value_type;
+        try {
+          auto& data = dynamic_cast<ValueType<ElementType>&>(*sptr);
+          return T{data.m_value};
+        } catch (const std::bad_cast& e2) {
+        }
+      } else {
+        try {
+          auto& data = dynamic_cast<ValueType<std::vector<T>>&>(*sptr);
+          if (!data.m_value.empty()) {
+            return data.m_value.front();
+          }
+        } catch (const std::bad_cast& e2) {
+        }
+      }
       std::cout << "Received a bad_cast exception while trying to convert " << std::quoted(the_key)
                 << "\n";
       return default_value;

@@ -51,7 +51,7 @@ bool Triangle::intersect_p(const Rayf& r) const {
 
   const real_type epsilon = 1e-8f;
   if (backface_cull) {
-    if (det < epsilon) return false;
+    if (det > -epsilon) return false;
   } else {
     if (std::abs(det) < epsilon) return false;
   }
@@ -81,7 +81,7 @@ bool Triangle::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
 
   const real_type epsilon = 1e-8f;
   if (backface_cull) {
-    if (det < epsilon) return false;
+    if (det > -epsilon) return false;
   } else {
     if (std::abs(det) < epsilon) return false;
   }
@@ -108,7 +108,7 @@ bool Triangle::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
       const Normal3f& n2 = mesh->normals[n[2]];
       shading_normal = normalize((1.0f - u - v_coord) * Vector3f(n0) + u * Vector3f(n1) + v_coord * Vector3f(n2));
     } else {
-      shading_normal = normalize(cross(e1, e2));
+      shading_normal = normalize(-cross(e1, e2));
     }
     if (flip_normals) shading_normal = -shading_normal;
     sf->n = shading_normal;
@@ -149,7 +149,7 @@ static void fill_missing_normals(TriangleMesh& mesh) {
     const Point3f& p0 = mesh.vertices[vertex_indices[0]];
     const Point3f& p1 = mesh.vertices[vertex_indices[1]];
     const Point3f& p2 = mesh.vertices[vertex_indices[2]];
-    Vector3f normal = normalize(cross(p1 - p0, p2 - p0));
+    Vector3f normal = normalize(-cross(p1 - p0, p2 - p0));
     mesh.normals.emplace_back(normal);
     int base_index = static_cast<int>(mesh.normals.size()) - 1;
     mesh.normal_indices[3 * tri + 0] = base_index;
@@ -174,7 +174,7 @@ static void compute_triangle_normals(TriangleMesh& mesh) {
     const Point3f& p0 = mesh.vertices[vertex_indices[0]];
     const Point3f& p1 = mesh.vertices[vertex_indices[1]];
     const Point3f& p2 = mesh.vertices[vertex_indices[2]];
-    Vector3f normal = normalize(cross(p1 - p0, p2 - p0));
+    Vector3f normal = normalize(-cross(p1 - p0, p2 - p0));
     mesh.normals.emplace_back(normal);
     int base_index = static_cast<int>(mesh.normals.size()) - 1;
     mesh.normal_indices[3 * tri + 0] = base_index;
@@ -415,7 +415,7 @@ std::vector<std::shared_ptr<Shape>> create_triangle_mesh(std::shared_ptr<Triangl
 }
 
 std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps) {
-  bool reverse_vertex_order = ps.retrieve<bool>("reverse_vertex_order", true);
+  bool reverse_vertex_order = ps.retrieve<bool>("reverse_vertex_order", false);
   bool compute_normals_flag = ps.retrieve<bool>("compute_normals", false);
   bool backface_cull = ps.retrieve<bool>("backface_cull", true);
 
