@@ -53,6 +53,17 @@ public:
   std::optional<RGBColor> Li(const Rayf& ray, const Scene& scene, int depth = 0) const override;
 };
 
+/// An integrator for cel (toon) shading
+class ToonIntegrator : public SamplerIntegrator {
+public:
+  std::vector<real_type> mapping_intervals_rad;
+
+  ToonIntegrator(std::shared_ptr<Camera> cam, const std::vector<real_type>& intervals_deg);
+  virtual ~ToonIntegrator() = default;
+
+  std::optional<RGBColor> Li(const Rayf& ray, const Scene& scene, int depth = 0) const override;
+};
+
 /// Factory function to create integrators
 Integrator* create_integrator(std::shared_ptr<Camera> camera, const ParamSet& ps);
 

@@ -1,0 +1,50 @@
+<RT3>
+    <lookat look_from="0 6 15" look_at="0 2 0" up="0 1 0" />
+    <camera type="perspective" fovy="50" /> 
+    
+    <!-- Diferentes intervalos para as faixas de cores do toon shading -->
+    <integrator type="toon" depth="1" mapping_interval="15 50 80" />
+    <film type="image" w_res="1280" h_res="720" filename="toon_sunset.png" img_type="png" gamma_corrected="false" />
+
+    <aggregator type="list"/>
+
+    <world_begin/>
+        <!-- Background com um gradiente (degradê) simulando o pôr do sol -->
+        <background type="4_colors" bl="255 120 50" tl="50 20 100" tr="50 20 100" br="255 120 50" />
+
+        <!-- Luzes: Direcional amarelada e ambiente levemente azulada -->
+        <light_source type="ambient" I="0.1 0.1 0.15" scale="1 1 1" />
+        <light_source type="directional" I="0.9 0.8 0.7" scale="1 1 1" from="-10 12 10" to="0 0 0" />
+
+        <!-- Materiais do tipo 'cel'. Note as silhuetas com cores, em vez de 100% pretas -->
+        <make_named_material type="cel" name="toon_orange" 
+            color_map="80 30 0  160 80 0  240 140 0  255 200 80" 
+            shadow_color="40 10 0" silhouette_color="30 5 0" silhouette_angle="80" />
+
+        <make_named_material type="cel" name="toon_purple" 
+            color_map="50 10 50  120 30 120  180 80 180  240 140 240" 
+            shadow_color="20 0 20" silhouette_color="15 0 15" silhouette_angle="82" />
+
+        <make_named_material type="cel" name="toon_cyan" 
+            color_map="0 50 50  0 120 120  0 180 180  100 240 240" 
+            shadow_color="0 20 20" silhouette_color="0 15 15" silhouette_angle="85" />
+
+        <make_named_material type="cel" name="toon_floor" 
+            color_map="30 30 40  80 80 90  150 150 160" 
+            shadow_color="15 15 20" silhouette_color="0 0 0" silhouette_angle="88" />
+
+        <!-- Objetos da cena -->
+        <named_material name="toon_floor"/>
+        <object type="sphere" center="0 -1000 0" radius="1000" />
+
+        <named_material name="toon_orange"/>
+        <object type="sphere" center="-3 1.5 1" radius="1.5" />
+
+        <named_material name="toon_cyan"/>
+        <object type="sphere" center="3 1.5 1" radius="1.5" />
+
+        <named_material name="toon_purple"/>
+        <object type="sphere" center="0 2.5 -2" radius="2.5" />
+
+    <world_end/>
+</RT3>

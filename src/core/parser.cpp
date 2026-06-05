@@ -227,6 +227,10 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "specular",
       "glossiness",
       "mirror",
+      "shadow_color",
+      "silhouette_color",
+      "silhouette_angle",
+      "color_map",
     },
   },
   {
@@ -240,6 +244,10 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "specular",
       "glossiness",
       "mirror",
+      "shadow_color",
+      "silhouette_color",
+      "silhouette_angle",
+      "color_map",
     },
   },
   {
@@ -280,7 +288,8 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     "integrator",
     {
       "type",
-      "depth"
+      "depth",
+      "mapping_interval"
     },
   },
   {
@@ -382,6 +391,12 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "to", convert<ryt::Point3f, 3> },
   { "cutoff", convert<ryt::real_type> },
   { "falloff", convert<ryt::real_type> },
+  // Toon/Cel attributes
+  { "mapping_interval", convert<ryt::real_type> },
+  { "shadow_color", convert<ryt::RGBColor, 3> },
+  { "silhouette_color", convert<ryt::RGBColor, 3> },
+  { "silhouette_angle", convert<ryt::real_type> },
+  { "color_map", convert<ryt::RGBColor, 3> },
 };
 
 

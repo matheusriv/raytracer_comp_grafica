@@ -11,6 +11,7 @@ set(SOURCES
     src/integrators/integrator.cpp
     src/integrators/FlatIntegrator.cpp
     src/integrators/NormalMapIntegrator.cpp
+    src/integrators/ToonIntegrator.cpp
     src/integrators/BlinnPhongIntegrator.cpp
     src/integrators/SamplerIntegrator.cpp
     src/core/background.cpp

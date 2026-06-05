@@ -21,6 +21,7 @@
 #include "parser.hpp"
 #include "scene.hpp"
 #include "blinn_material.hpp"
+#include "cel_material.hpp"
 #include "light.hpp"
 
 namespace ryt{ 
@@ -159,6 +160,21 @@ void App::material(const ParamSet& ps) {
     if (mirror.r > 1.0f || mirror.g > 1.0f || mirror.b > 1.0f) mirror = mirror / 255.0f;
 
     m_render_options->current_material = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g, mirror);
+  } else if (type == "cel") {
+    auto color_map_vec = ps.retrieve<std::vector<RGBColor>>("color_map", {});
+    auto shadow_color = ps.retrieve<RGBColor>("shadow_color", color_black);
+    auto silhouette_color = ps.retrieve<RGBColor>("silhouette_color", color_black);
+    auto silhouette_angle = ps.retrieve<real_type>("silhouette_angle", 85.0f);
+
+    std::vector<RGBColor> color_map;
+    for(auto c : color_map_vec) {
+        if (c.r > 1.0f || c.g > 1.0f || c.b > 1.0f) c = c / 255.0f;
+        color_map.push_back(c);
+    }
+    if (shadow_color.r > 1.0f || shadow_color.g > 1.0f || shadow_color.b > 1.0f) shadow_color = shadow_color / 255.0f;
+    if (silhouette_color.r > 1.0f || silhouette_color.g > 1.0f || silhouette_color.b > 1.0f) silhouette_color = silhouette_color / 255.0f;
+
+    m_render_options->current_material = std::make_shared<CelMaterial>(color_map, shadow_color, silhouette_color, silhouette_angle);
   }
 }
 
@@ -217,6 +233,21 @@ void App::make_named_material(const ParamSet& ps) {
     if (mirror.r > 1.0f || mirror.g > 1.0f || mirror.b > 1.0f) mirror = mirror / 255.0f;
 
     m_render_options->named_materials[name] = std::make_shared<BlinnPhongMaterial>(ka, kd, ks, g, mirror);
+  } else if (type == "cel") {
+    auto color_map_vec = ps.retrieve<std::vector<RGBColor>>("color_map", {});
+    auto shadow_color = ps.retrieve<RGBColor>("shadow_color", color_black);
+    auto silhouette_color = ps.retrieve<RGBColor>("silhouette_color", color_black);
+    auto silhouette_angle = ps.retrieve<real_type>("silhouette_angle", 85.0f);
+
+    std::vector<RGBColor> color_map;
+    for(auto c : color_map_vec) {
+        if (c.r > 1.0f || c.g > 1.0f || c.b > 1.0f) c = c / 255.0f;
+        color_map.push_back(c);
+    }
+    if (shadow_color.r > 1.0f || shadow_color.g > 1.0f || shadow_color.b > 1.0f) shadow_color = shadow_color / 255.0f;
+    if (silhouette_color.r > 1.0f || silhouette_color.g > 1.0f || silhouette_color.b > 1.0f) silhouette_color = silhouette_color / 255.0f;
+
+    m_render_options->named_materials[name] = std::make_shared<CelMaterial>(color_map, shadow_color, silhouette_color, silhouette_angle);
   }
 }
 
