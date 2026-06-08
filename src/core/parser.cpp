@@ -464,14 +464,14 @@ void parse_scene_file(const char* filename) {
   // Load document.
   tinyxml2::XMLDocument doc;
   if (doc.LoadFile(filename) != tinyxml2::XML_SUCCESS) {
-    std::cerr << "Error loading the XML file!" << '\n';
+    ERROR("Error loading the XML file!");
     return;
   }
 
   // Get the Root node
   tinyxml2::XMLElement* root = doc.RootElement();
   if (root == nullptr) {
-    std::cerr << "Root node of the XML tree was not found!" << '\n';
+    ERROR("Root node of the XML tree was not found!");
     return;
   }
   

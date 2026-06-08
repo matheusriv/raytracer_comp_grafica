@@ -47,24 +47,6 @@ struct RenderOptions {
 };
 
 /*!
- * The Graphics State comprises the current material, lib of material, and flip normals.
- * If affects all incoming elements of the scene and may be saved on a stack.
- * It represents a transient (current) state that affects all graphics.
- * --------------------------------------------------------------------------------
- * I'm following the same approach described in the PBRT code: we only effectively
- * copy a lib (texture, material, or otherwise), if, on the new GS, the scene file
- * defines a new named element (material, texture, etc.). In that case, we evaluate
- * if the clone flag is off, which means we need to actually copy the lib before
- * inserting the new element and then turn the flag on. They call this approach
- * "copy on write", which means: "We only actually copy the dictionary to the new GS
- * context if the client defines a new element on the current GS context level."
- * --------------------------------------------------------------------------------
- */
-struct GraphicsState {
-  // TODO
-};
-
-/*!
  * Application class that represents our graphics library (GL) or API.
  *
  * This GL works in **retained mode**.

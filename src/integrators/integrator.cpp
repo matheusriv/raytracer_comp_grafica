@@ -20,7 +20,7 @@ Integrator* create_integrator(std::shared_ptr<Camera> camera, const ParamSet& ps
     auto intervals = ps.retrieve<std::vector<real_type>>("mapping_interval", {});
     return new ToonIntegrator(std::move(camera), intervals);
   }
-  std::cerr << "Warning: Unknown integrator type '" << type << "', falling back to 'flat'.\n";
+  WARNING("Unknown integrator type '" + type + "', falling back to 'flat'.");
   return new FlatIntegrator(std::move(camera));
 }
 

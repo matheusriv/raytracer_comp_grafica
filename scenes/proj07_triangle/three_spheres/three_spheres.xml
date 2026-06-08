@@ -10,7 +10,7 @@
    <!-- Objects storage -->
    <aggregator type="list"/>
 
-   <film type="image" w_res="1920" h_res="1080" filename="3_spheres_plane.png" img_type="png" gamma_corraected="false" />
+   <film type="image" w_res="1920" h_res="1080" filename="3_spheres_plane.png" img_type="png" gamma_corrected="false" />
    <!-- The Scene -->
    <world_begin/>
 

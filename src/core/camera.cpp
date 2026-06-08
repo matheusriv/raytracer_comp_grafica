@@ -95,8 +95,7 @@ Rayf OrthographicCamera::generate_ray(int x, int y) const {
 
 Camera* create_camera(std::unique_ptr<Film> film, const ParamSet& camera_ps, const ParamSet& lookat_ps) {
   auto camera_type = camera_ps.retrieve<std::string>("type", "perspective");
-  if (camera_type == "orthographic" || camera_type == "orthographic_camera" ||
-      camera_type == "ortographic") {
+  if (camera_type == "orthographic" || camera_type == "orthographic_camera") {
     return new OrthographicCamera(std::move(film), camera_ps, lookat_ps);
   }
   return new PerspectiveCamera(std::move(film), camera_ps, lookat_ps);

@@ -12,7 +12,7 @@ namespace ryt {
 void write_ppm(const std::string& filename, const std::vector<RGBColor>& pixels, int w, int h, bool ascii) {
   std::ofstream file(filename, std::ios::binary);
   if (!file) {
-    std::cerr << "Cannot open file " << filename << std::endl;
+    WARNING("Cannot open file " + filename);
     return;
   }
 

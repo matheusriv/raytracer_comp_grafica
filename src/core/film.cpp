@@ -34,10 +34,8 @@ Film::Film(const Point2i& resolution,
 
 Film::~Film() = default;
 
-/*!
- * Adds a computed sample (pixel color) to the image at the given pixel coordinates.
- * Checks boundaries to prevent out-of-bounds memory access.
- */
+/// Adds a computed sample (pixel color) to the image at the given pixel coordinates.
+/// Checks boundaries to prevent out-of-bounds memory access.
 void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
   int x = pixel_coord.x;
   int y = pixel_coord.y;
@@ -51,7 +49,7 @@ void Film::add_sample(const Point2i& pixel_coord, const RGBColor& pixel_color) {
 void Film::write_image() const {
   std::vector<RGBColor> output_pixels = m_pixels;
   
-  // Apply gamma correction to the pixels before saving
+  // Apply gamma correction to the pixels before saving.
   if (m_activate_gamma_correction) {
     float inv_gamma = 1.0f / 2.2f;
     for (auto& color : output_pixels) {
@@ -61,16 +59,19 @@ void Film::write_image() const {
     }
   }
 
-  bool saved = false;
-  if (m_image_type == image_type_e::PPM3 || m_image_type == image_type_e::PPM6) {
-    bool ascii = (m_image_type == image_type_e::PPM3);
-    write_ppm(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y, ascii);
-    saved = true;
-  } else if (m_image_type == image_type_e::PNG) {
-    write_png(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y);
-    saved = true;
-  } else {
-    std::cerr << "Image format not supported." << std::endl;
+  bool saved = true;
+  switch (m_image_type) {
+    case image_type_e::PPM3:
+    case image_type_e::PPM6:
+      write_ppm(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y, m_image_type == image_type_e::PPM3);
+      break;
+    case image_type_e::PNG:
+      write_png(m_filename, output_pixels, m_full_resolution.x, m_full_resolution.y);
+      break;
+    default:
+      WARNING("Image format not supported.");
+      saved = false;
+      break;
   }
 
   if (saved) {
@@ -91,30 +92,29 @@ std::string handles_filename(const ParamSet& ps) {
   if (!App::m_current_run_options.outfile.empty()) {
     filename = App::m_current_run_options.outfile;
     from_cli = true;
-  } else {
-    // Otherwise, retrieve from the scene file (XML)
+  } else { // Otherwise, retrieve from the scene file (XML).
     filename = ps.retrieve<std::string>("filename", "output");
   }
 
   std::string img_type = ps.retrieve<std::string>("img_type", "png");
 
-  // If the filename already has an extension, remove it to get only the name
+  // If the filename already has an extension, remove it to get only the name.
   size_t last_dot = filename.find_last_of('.');
   size_t last_slash = filename.find_last_of("/\\");
   if (last_dot != std::string::npos && (last_slash == std::string::npos || last_dot > last_slash)) {
     filename = filename.substr(0, last_dot);
   }
   
-  // Add the appropriate extension based on the requested image type
+  // Add the appropriate extension based on the requested image type.
   filename += (img_type == "png") ? ".png" : ".ppm";
 
-  // If it's just a simple filename (without any directory paths), 
-  // save it by default in the results/ directory
+  // If it's just a simple filename (without any directory paths),
+  // save it by default in the results/ directory.
   if (filename.find('/') == std::string::npos && filename.find('\\') == std::string::npos) {
     filename = "../results/" + filename;
   } else if (!from_cli) {
-    // If it contains a slash (e.g. "./output") and didn't come from the CLI, we resolve the relative path
-    // starting from the directory of the original XML scene file itself.
+    // If it contains a slash (e.g. "./output") and didn't come from the CLI, we resolve the 
+    // relative path starting from the directory of the original XML scene file itself.
     fs::path path_obj(filename);
     if (path_obj.is_relative()) {
       fs::path xml_dir = fs::path(App::m_current_run_options.filename).parent_path();
@@ -138,7 +138,7 @@ ryt::Point2i handles_dimensions(const ParamSet& ps) {
   int height = ps.retrieve<int>("h_res", ps.retrieve<int>("y_res", 720));
   Point2i film_dimension{ width, height };
   if (App::m_current_run_options.quick_render) {
-    // decrease resolution.
+    // Decrease resolution.
     film_dimension.x = std::max(1, film_dimension.x / 4);
     film_dimension.y = std::max(1, film_dimension.y / 4);
   }
@@ -152,9 +152,6 @@ ryt::Point2i handles_dimensions(const ParamSet& ps) {
 
 /// Factory function that creates and returns a Film object based on the provided ParamSet.
 Film* create_film(const ParamSet& ps) {
-#ifdef DEBUG
-  std::cout << ">>> Inside create_film()\n";
-#endif
   // Choose the filename.
   auto filename = handles_filename(ps);
 
@@ -171,24 +168,12 @@ Film* create_film(const ParamSet& ps) {
     { "ppm6", Film::image_type_e::PPM6 },
     { "ppm", Film::image_type_e::PPM6 },
   };
-  auto type{ image_type[ps.retrieve<std::string>("img_type", "png")] };
+  auto imgtype{ image_type[ps.retrieve<std::string>("img_type", "png")] };
 
   // Get gamma correction request.
   bool apply_gamma_correction = ps.retrieve<bool>("gamma_corrected", false);
 
-#ifdef DEBUG
-  std::cout << "================================================\n";
-  std::cout << ">>> create_film() - film parameters are:\n";
-  std::cout << "    - filename: " << std::quoted(filename) << "\n";
-  // std::cout << "    - crop window: " << crop_window << "\n";
-  std::cout << "    - w_res: " << dimensions.x << "\n";
-  std::cout << "    - h_res: " << dimensions.y << "\n";
-  std::cout << "    - image type: " << ps.retrieve<std::string>("img_type", "png") << "\n";
-  std::cout << "    - gamma correction: " << std::boolalpha << apply_gamma_correction << "\n";
-  std::cout << "================================================\n";
-#endif
-
-  return new Film(dimensions, filename, type, apply_gamma_correction);
+  return new Film(dimensions, filename, imgtype, apply_gamma_correction);
 }
 
 }  // namespace ryt

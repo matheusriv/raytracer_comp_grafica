@@ -11,14 +11,6 @@
 
 namespace ryt {
 
-namespace {
-
-void reverse_triangle_indices(int* array) {
-  std::swap(array[0], array[2]);
-}
-
-}  // namespace
-
 Triangle::Triangle(std::shared_ptr<TriangleMesh> mesh, int tri_id,
                    bool backface_cull, bool flip_normals)
     : Shape(flip_normals), v{ &mesh->vertex_indices[3 * tri_id] },
@@ -40,33 +32,9 @@ Bounds3f Triangle::world_bounds() const {
 }
 
 bool Triangle::intersect_p(const Rayf& r) const {
-  const Point3f& p0 = mesh->vertices[v[0]];
-  const Point3f& p1 = mesh->vertices[v[1]];
-  const Point3f& p2 = mesh->vertices[v[2]];
-
-  Vector3f e1 = p1 - p0;
-  Vector3f e2 = p2 - p0;
-  Vector3f pvec = cross(r.d, e2);
-  real_type det = dot(e1, pvec);
-
-  const real_type epsilon = 1e-8f;
-  if (backface_cull) {
-    if (det > -epsilon) return false;
-  } else {
-    if (std::abs(det) < epsilon) return false;
-  }
-
-  real_type inv_det = 1.0f / det;
-  Vector3f tvec = r.o - p0;
-  real_type u = dot(tvec, pvec) * inv_det;
-  if (u < 0.0f || u > 1.0f) return false;
-
-  Vector3f qvec = cross(tvec, e1);
-  real_type v_coord = dot(r.d, qvec) * inv_det;
-  if (v_coord < 0.0f || u + v_coord > 1.0f) return false;
-
-  real_type t_hit = dot(e2, qvec) * inv_det;
-  return t_hit >= r.t_min && t_hit <= r.t_max;
+  // Reuses the core logic of intersect, passing nullptr to skip
+  // the heavy computation of normals, UVs, and Surfel generation.
+  return intersect(r, nullptr, nullptr);
 }
 
 bool Triangle::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
@@ -88,12 +56,12 @@ bool Triangle::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
 
   real_type inv_det = 1.0f / det;
   Vector3f tvec = r.o - p0;
-  real_type u = dot(tvec, pvec) * inv_det;
-  if (u < 0.0f || u > 1.0f) return false;
+  real_type u_coord = dot(tvec, pvec) * inv_det;
+  if (u_coord < 0.0f || u_coord > 1.0f) return false;
 
   Vector3f qvec = cross(tvec, e1);
   real_type v_coord = dot(r.d, qvec) * inv_det;
-  if (v_coord < 0.0f || u + v_coord > 1.0f) return false;
+  if (v_coord < 0.0f || u_coord + v_coord > 1.0f) return false;
 
   real_type t = dot(e2, qvec) * inv_det;
   if (t < r.t_min || t > r.t_max) return false;
@@ -106,7 +74,7 @@ bool Triangle::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
       const Normal3f& n0 = mesh->normals[n[0]];
       const Normal3f& n1 = mesh->normals[n[1]];
       const Normal3f& n2 = mesh->normals[n[2]];
-      shading_normal = normalize((1.0f - u - v_coord) * Vector3f(n0) + u * Vector3f(n1) + v_coord * Vector3f(n2));
+      shading_normal = normalize((1.0f - u_coord - v_coord) * Vector3f(n0) + u_coord * Vector3f(n1) + v_coord * Vector3f(n2));
     } else {
       shading_normal = normalize(-cross(e1, e2));
     }
@@ -120,10 +88,10 @@ bool Triangle::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
       const Point2f& uv1 = mesh->uvcoords[uv[1]];
       const Point2f& uv2 = mesh->uvcoords[uv[2]];
       sf->uv = Point2f{
-        (1.0f - u - v_coord) * uv0.x + u * uv1.x + v_coord * uv2.x,
-        (1.0f - u - v_coord) * uv0.y + u * uv1.y + v_coord * uv2.y};
+        (1.0f - u_coord - v_coord) * uv0.x + u_coord * uv1.x + v_coord * uv2.x,
+        (1.0f - u_coord - v_coord) * uv0.y + u_coord * uv1.y + v_coord * uv2.y};
     } else {
-      sf->uv = Point2f{ u, v_coord };
+      sf->uv = Point2f{ u_coord, v_coord };
     }
   }
   return true;
@@ -141,21 +109,8 @@ static void ensure_uvcoords(TriangleMesh& mesh) {
   }
 }
 
-static void fill_missing_normals(TriangleMesh& mesh) {
-  mesh.normals.clear();
-  mesh.normal_indices.assign(mesh.n_triangles * 3, 0);
-  for (int tri = 0; tri < mesh.n_triangles; ++tri) {
-    int* vertex_indices = &mesh.vertex_indices[3 * tri];
-    const Point3f& p0 = mesh.vertices[vertex_indices[0]];
-    const Point3f& p1 = mesh.vertices[vertex_indices[1]];
-    const Point3f& p2 = mesh.vertices[vertex_indices[2]];
-    Vector3f normal = normalize(-cross(p1 - p0, p2 - p0));
-    mesh.normals.emplace_back(normal);
-    int base_index = static_cast<int>(mesh.normals.size()) - 1;
-    mesh.normal_indices[3 * tri + 0] = base_index;
-    mesh.normal_indices[3 * tri + 1] = base_index;
-    mesh.normal_indices[3 * tri + 2] = base_index;
-  }
+static void reverse_triangle_indices(int* array) {
+  std::swap(array[0], array[2]);
 }
 
 static void reverse_triangles(TriangleMesh& mesh) {
@@ -197,13 +152,13 @@ bool load_mesh_data(const std::string& filename,
 
   bool result = tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, filename.c_str());
   if (!warn.empty()) {
-    std::cerr << "tinyobj warning: " << warn << '\n';
+    WARNING("tinyobj warning: " + warn);
   }
   if (!err.empty()) {
-    std::cerr << "tinyobj error: " << err << '\n';
+    WARNING("tinyobj error: " + err);
   }
   if (!result) {
-    std::cerr << "Unable to parse OBJ file: " << filename << '\n';
+    WARNING("Unable to parse OBJ file: " + filename);
     return false;
   }
 
@@ -270,13 +225,13 @@ bool load_mesh_data(const std::string& filename,
   }
 
   if (mesh->vertex_indices.empty()) {
-    std::cerr << "OBJ file has no triangle data: " << filename << '\n';
+    WARNING("OBJ file has no triangle data: " + filename);
     return false;
   }
 
   mesh->n_triangles = static_cast<int>(mesh->vertex_indices.size() / 3);
   if (mesh->n_triangles * 3 != static_cast<int>(mesh->vertex_indices.size())) {
-    std::cerr << "OBJ file produced invalid triangle index count: " << filename << '\n';
+    WARNING("OBJ file produced invalid triangle index count: " + filename);
     return false;
   }
 
@@ -310,7 +265,7 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
 
   int ntriangles = ps.retrieve<int>("ntriangles", 0);
   if (ntriangles <= 0) {
-    std::cerr << "trianglemesh requires ntriangles > 0" << '\n';
+    WARNING("trianglemesh requires ntriangles > 0");
     return false;
   }
 
@@ -321,11 +276,11 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
   auto uvcoords = ps.retrieve<std::vector<Point2f>>("uv", {});
 
   if (indices.empty() || static_cast<int>(indices.size()) != ntriangles * 3) {
-    std::cerr << "trianglemesh requires exactly 3*ntriangles vertex_indices" << '\n';
+    WARNING("trianglemesh requires exactly 3*ntriangles vertex_indices");
     return false;
   }
   if (vertices.empty()) {
-    std::cerr << "trianglemesh requires vertex positions" << '\n';
+    WARNING("trianglemesh requires vertex positions");
     return false;
   }
 
@@ -339,7 +294,7 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
     mesh->normals = std::move(normals);
     if (!normal_indices.empty()) {
       if (static_cast<int>(normal_indices.size()) != ntriangles * 3) {
-        std::cerr << "trianglemesh requires exactly 3*ntriangles normal_indices" << '\n';
+        WARNING("trianglemesh requires exactly 3*ntriangles normal_indices");
         return false;
       }
       mesh->normal_indices = std::move(normal_indices);
@@ -359,7 +314,7 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
         mesh->normal_indices[entry + 2] = tri;
       }
     } else {
-      std::cerr << "trianglemesh normals size does not match vertices or triangles" << '\n';
+      WARNING("trianglemesh normals size does not match vertices or triangles");
       return false;
     }
   }
@@ -382,7 +337,7 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
         mesh->uvcoord_indices[entry + 2] = tri;
       }
     } else {
-      std::cerr << "trianglemesh uv size does not match vertices or triangles" << '\n';
+      WARNING("trianglemesh uv size does not match vertices or triangles");
       return false;
     }
   }

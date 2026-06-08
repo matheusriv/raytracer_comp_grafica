@@ -74,9 +74,13 @@ void App::film(const ParamSet& ps) {
   }
   // Store the parameters associated with the film for later camera creation.
   m_render_options->actors["film"] = ps;
-  if (m_current_run_options.verbose) {
-    auto type = ps.retrieve<std::string>("type", "unknown");
-    std::cout << ">>> film type: " << std::quoted(type) << '\n';
+  if(m_current_run_options.verbose){
+    std::cout << ">>> Film parameters:\n"
+            << "    - type: " << ps.retrieve<std::string>("type", "") << "\n"
+            << "    - filename: " << ps.retrieve<std::string>("filename", "output") << "\n"
+            << "    - img_type: " << ps.retrieve<std::string>("img_type", "png") << "\n"
+            << "    - w_res/x_res: " << ps.retrieve<int>("w_res", ps.retrieve<int>("x_res", 1280)) << "\n"
+            << "    - h_res/y_res: " << ps.retrieve<int>("h_res", ps.retrieve<int>("y_res", 720)) << "\n\n";
   }
 }
 
@@ -87,7 +91,7 @@ void App::camera(const ParamSet& ps) {
   m_render_options->actors["camera"] = ps;
   if (m_current_run_options.verbose) {
     auto type = ps.retrieve<std::string>("type", "perspective");
-    std::cout << ">>> camera type: " << std::quoted(type) << '\n';
+    std::cout << ">>> Camera type: " << std::quoted(type) << "\n\n";
   }
 }
 
@@ -101,11 +105,7 @@ void App::look_at(const ParamSet& ps) {
 void App::background(const ParamSet& ps) {
   check_in_world_block_state("App::background");
 
-  auto type = ps.retrieve<std::string>("type", "unknown");
-  if (type == "unknown") {
-    ERROR("API::background(): Missing \"type\" specificaton for the background.");
-  }
-
+  auto type = ps.retrieve<std::string>("type", "single_color");
   if (m_current_run_options.verbose) {
     std::cout << ">>> Background parameters:\n"
             << "    - type: " << type << "\n";
@@ -125,15 +125,8 @@ void App::background(const ParamSet& ps) {
     std::cout << "\n";
   }
   
-  Background* bkg{ nullptr };
-  if (type == "single_color" or type == "4_colors" or type == "colors") {
-    bkg = create_color_background(type, ps);
-  } else {
-    WARNING(std::string{ "API::background(): unknown background type \"" } + type
-            + std::string{ "\" provided; assuming colored background." });
-    bkg = create_color_background(type, ps);
-  }
-  // Store current background objec.
+  Background* bkg = create_color_background(type, ps);
+  // Store current background object.
   m_render_options->background.reset(bkg);
 }
 
@@ -302,7 +295,7 @@ void App::aggregator(const ParamSet& ps) {
   m_render_options->actors["aggregator"] = ps;
   if (m_current_run_options.verbose) {
     auto type = ps.retrieve<std::string>("type", "bvh");
-    std::cout << ">>> aggregator type: " << std::quoted(type) << '\n';
+    std::cout << ">>> Aggregator type: " << std::quoted(type) << "\n\n";
   }
 }
 
@@ -314,7 +307,6 @@ void App::world_begin(const ParamSet& ps) {
 
 /// Erase temporary engine states so that we may render another scene with the same configuration.
 void App::hard_engine_reset() {
-  // Render options reset
   if (m_render_options) {
     m_render_options->primitives.clear();
     m_render_options->lights.clear();
@@ -329,110 +321,86 @@ Camera* App::make_camera(const ParamSet& camera_ps, const ParamSet& film_ps) {
   if (film == nullptr) {
     return nullptr;
   }
-  
-  if(m_current_run_options.verbose){
-    std::cout << ">>> Parameters stored in film_ps:\n"
-            << "    - type: " << film_ps.retrieve<std::string>("type", "") << "\n"
-            << "    - filename: " << film_ps.retrieve<std::string>("filename", "output") << "\n"
-            << "    - img_type: " << film_ps.retrieve<std::string>("img_type", "png") << "\n"
-            << "    - w_res/x_res: " << film_ps.retrieve<int>("w_res", film_ps.retrieve<int>("x_res", 1280)) << "\n"
-            << "    - h_res/y_res: " << film_ps.retrieve<int>("h_res", film_ps.retrieve<int>("y_res", 720)) << "\n\n";
-  }
 
   return create_camera(std::move(film), camera_ps, m_render_options->actors["lookat"]);
+}
+
+static void print_camera_info(const Camera* camera, const std::string& camera_type) {
+  std::ostringstream oss;
+  oss << ">>> create_" << camera_type << "_camera()::screen_window:\n"
+      << "[ " << camera->left() << " " << camera->right() << " "
+      << camera->bottom() << " " << camera->top() << " ]\n\n"
+      << ">>> The Camera frame is:\n"
+      << "    u: " << camera->u() << "\n"
+      << "    v: " << camera->v() << "\n"
+      << "    w: " << camera->w() << "\n"
+      << "  eye: " << camera->eye() << "\n";
+  MESSAGE(oss.str());
+}
+
+static bool build_scene_and_integrator(RenderOptions* options) {
+  std::shared_ptr<Primitive> aggregate;
+  if (options->actors.count("aggregator")) {
+    const auto& ps = options->actors.at("aggregator");
+    auto agg_type = ps.retrieve<std::string>("type", "bvh");
+    if (agg_type == "bvh") {
+      aggregate = std::make_shared<BVHAccel>(
+          std::move(options->primitives),
+          ps.retrieve<int>("max_prims_per_node", 4),
+          ps.retrieve<std::string>("split_method", "middle"));
+    } else if (agg_type != "list") {
+      WARNING("Unknown aggregator type \"" + std::string(agg_type) + "\". Falling back to \"list\".");
+    }
+  }
+  if (!aggregate) {
+    aggregate = std::make_shared<PrimList>(std::move(options->primitives));
+  }
+  options->scene = std::make_unique<Scene>(
+      std::move(options->background),
+      aggregate);
+      
+  // Create integrator
+  options->integrator = std::unique_ptr<Integrator>(
+      create_integrator(options->camera, options->actors["integrator"]));
+
+  return options->scene != nullptr && options->integrator != nullptr;
 }
 
 void App::world_end(const ParamSet& ps) {
   check_in_world_block_state("App::world_end()");
 
-  // ===============================================================
-  // 1) Create the integrator.
-  // 2) Create the scene (requires the list of objects and background)
-  // ===============================================================
   auto camera_type = m_render_options->actors["camera"].retrieve<std::string>("type", "perspective");
-  Camera* camera = make_camera(m_render_options->actors["camera"],
-                                m_render_options->actors["film"]);
-
+  Camera* camera = make_camera(m_render_options->actors["camera"], m_render_options->actors["film"]);
   if (camera == nullptr) {
     ERROR("App::setup_camera(): Unable to create camera.");
     return;  // or handle error
   }
   m_render_options->camera.reset(camera);
 
-  std::ostringstream oss;
-  oss << ">>> create_" << camera_type << "_camera()::screen_window:";
-  MESSAGE(oss.str());
-  oss.str(std::string()); oss.clear();
-  oss << "[ " << m_render_options->camera->left() << " "
-      << m_render_options->camera->right() << " "
-      << m_render_options->camera->bottom() << " "
-      << m_render_options->camera->top() << " ]";
-  MESSAGE(oss.str());
-  MESSAGE("");
-
-  MESSAGE(">>> The Camera frame is:");
-  oss.str(std::string()); oss.clear();
-  oss << "    u: " << m_render_options->camera->u();
-  MESSAGE(oss.str());
-  oss.str(std::string()); oss.clear();
-  oss << "    v: " << m_render_options->camera->v();
-  MESSAGE(oss.str());
-  oss.str(std::string()); oss.clear();
-  oss << "    w: " << m_render_options->camera->w();
-  MESSAGE(oss.str());
-  oss.str(std::string()); oss.clear();
-  oss << "  eye: " << m_render_options->camera->eye();
-  MESSAGE(oss.str());
+  print_camera_info(m_render_options->camera.get(), camera_type);
 
   // The scene has already been parsed and properly set up. It's time to render the scene.
-  
-  // Create scene (with background and all collected primitives)
-  std::shared_ptr<Primitive> aggregate;
-  if (m_render_options->actors.count("aggregator")) {
-    const auto& ps = m_render_options->actors.at("aggregator");
-    auto agg_type = ps.retrieve<std::string>("type", "bvh");
-    if (agg_type == "bvh") {
-      aggregate = std::make_shared<BVHAccel>(
-          std::move(m_render_options->primitives),
-          ps.retrieve<int>("max_prims_per_node", 4),
-          ps.retrieve<std::string>("split_method", "middle"));
-    } else if (agg_type != "list") {
-      WARNING("Unknown aggregator type \"" + agg_type + "\". Falling back to \"list\".");
-    }
-  }
-  if (!aggregate) {
-    aggregate = std::make_shared<PrimList>(std::move(m_render_options->primitives));
-  }
-  m_render_options->scene = std::make_unique<Scene>(
-      std::move(m_render_options->background),
-      aggregate);
-  // Create integrator
-  m_render_options->integrator = std::unique_ptr<Integrator>(
-      create_integrator(m_render_options->camera, m_render_options->actors["integrator"]));
-
-  bool scene_and_integrator_ok = m_render_options->scene && m_render_options->integrator;
+  bool scene_and_integrator_ok = build_scene_and_integrator(m_render_options.get());
 
   if (scene_and_integrator_ok) {
-    MESSAGE("    Parsing scene successfuly done!\n");
-    MESSAGE("[3] Starting ray tracing progress.\n");
-    MESSAGE("    Ray tracing is usually a slow process, please be patient: \n");
-    std::cout << ">>> Rendering started with resolution - width: " 
-      << m_render_options->camera->film().get_resolution().x << ", height: " 
-      << m_render_options->camera->film().get_resolution().y << "\n";
+    MESSAGE("    Parsing scene successfuly done!\n"
+            "[3] Starting ray tracing progress.\n"
+            "    Ray tracing is usually a slow process, please be patient: \n\n"
+            ">>> Rendering started with resolution - width: " 
+            + std::to_string(m_render_options->camera->film().get_resolution().x) + ", height: " 
+            + std::to_string(m_render_options->camera->film().get_resolution().y) + "\n");
     //================================================================================
     auto start = std::chrono::steady_clock::now();
     m_render_options->integrator->render(*m_render_options->scene);
     auto end = std::chrono::steady_clock::now();
     //================================================================================
     auto diff = end - start;  // Store the time difference between start and end
-    // Seconds
-    auto diff_sec = std::chrono::duration_cast<std::chrono::seconds>(diff);
+    auto diff_sec = std::chrono::duration_cast<std::chrono::seconds>(diff); // Seconds
     MESSAGE("    Time elapsed: " + std::to_string(diff_sec.count()) + " seconds ("
             + std::to_string(std::chrono::duration<double, std::milli>(diff).count()) + " ms) \n");
   }
-  // Basic clean up, preparing for new rendering, in case we have
-  // several scene setup + world in a single input scene file.
-  m_current_block_state = AppState::SetupBlock;  // correct machine state.
+  // Reset state to allow multiple scenes per file.
+  m_current_block_state = AppState::SetupBlock;
 }
 
 void App::init_engine(const RunningOptions& run_options) {
@@ -446,8 +414,6 @@ void App::init_engine(const RunningOptions& run_options) {
   m_current_block_state = AppState::SetupBlock;
   // Preprare render infrastructure for a new scene.
   m_render_options = std::make_unique<RenderOptions>();
-  // Create a new initial GS
-  // m_current_gs = GraphicsState();
   MESSAGE("[1] Rendering engine initiated.\n");
 }
 

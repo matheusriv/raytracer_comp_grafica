@@ -18,9 +18,8 @@ void usage(std::string_view msg = "") {
     << "  Rendering simulation options:\n"
     << "    --help                     Print this help text.\n"
     << "    --verbose or -v            Run in verbose mode.\n"
-    << "    --cropwindow x0 x1 y0 y1   Specify an image crop window; values must be between 0 and "
-       "1.\n"
-    << "    --quick                    Reduces quality parameters to render image quickly.\n"
+    //<< "    --cropwindow x0 x1 y0 y1   Specify an image crop window; values must be between 0 and 1.\n"
+    //<< "    --quick                    Reduces quality parameters to render image quickly.\n"
     << "    --outfile <filename>       Write the rendered image to <filename>.\n\n";
   exit(msg.empty() ? 1 : 0);
 }
@@ -129,7 +128,7 @@ int main(int argc, char* argv[]) {
   // ================================================
   // (2) Welcome message
   // ================================================
-  std::cout << "Ray Tracer -- raym, v1.0 Matheus R.\n";
+  std::cout << "Ray Tracer -- raytmath, v1.0 Matheus R.\n";
 
   // ================================================
   // (3) Initialize the renderer engine and load a scene.
