@@ -8,19 +8,12 @@ Este é um projeto acadêmico em desenvolvimento para a disciplina de Computaç�
 
 ## ⚙️ Como Compilar
 
-Você pode compilar o projeto de duas formas diferentes.
-
-**Opção 1: Usando CMake (Recomendado)**
+**Usando CMake**
 ```bash
 mkdir build
 cd build
 cmake ..
 cmake --build .
-```
-
-**Opção 2: Usando o Makefile raiz**
-```bash
-make
 ```
 
 ## Como Executar
