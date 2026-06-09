@@ -8,7 +8,7 @@ bool VisibilityTester::unoccluded(const Scene& scene) const {
   Vector3f dir = p1 - p0;
   float dist = std::sqrt(dot(dir, dir));
   dir = normalize(dir);
-  Rayf ray(p0, dir); // The offset to avoid shadow acne is now handled in sample_Li using the normal
+  Rayf ray(p0, dir);
   Surfel sf;
   if (scene.intersect(ray, &sf)) {
     Vector3f hit_dir = sf.p - p0;

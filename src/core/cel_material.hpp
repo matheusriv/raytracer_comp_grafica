@@ -20,7 +20,7 @@ public:
       }
 
   RGBColor color() const override {
-    if (!color_map.empty()) return color_map.back(); // Returns the lightest color as base
+    if (!color_map.empty()) return color_map.back();
     return color_black;
   }
 

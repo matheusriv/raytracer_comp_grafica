@@ -12,12 +12,12 @@ std::optional<RGBColor> BlinnPhongIntegrator::Li(const Rayf& ray, const Scene& s
     return std::nullopt;
   }
 
-  Vector3f v = normalize(Vector3f{0.0f, 0.0f, 0.0f} - ray.d); // View vector towards the camera
+  Vector3f v = normalize(-ray.d); // View vector towards the camera
   Vector3f n = normalize(sf.n);
 
   // If hitting from behind the face, reverse the normal
   if (dot(n, v) < 0.0f) {
-    n = Vector3f{0.0f, 0.0f, 0.0f} - n;
+    n = -n;
   }
 
   const Material* mat = sf.primitive->get_material();
