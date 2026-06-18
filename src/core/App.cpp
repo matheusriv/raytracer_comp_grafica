@@ -30,6 +30,15 @@ namespace ryt{
 App::AppState App::m_current_block_state = AppState::Uninitialized;
 RunningOptions App::m_current_run_options;
 std::unique_ptr<RenderOptions> App::m_render_options;
+Transform App::m_current_CTM;
+std::stack<Transform> App::m_CTM_stack;
+GraphicsState App::m_current_GS;
+std::stack<GraphicsState> App::m_GS_stack;
+Dictionary<std::string, Transform> App::m_saved_coord_systems;
+std::vector<std::unique_ptr<Transform>> App::m_transform_cache;
+std::string App::m_current_instance_name;
+std::vector<std::shared_ptr<Primitive>> App::m_current_instance_primitives;
+Dictionary<std::string, std::shared_ptr<Primitive>> App::m_instances;
 
 /// Check whether the current state has been intialized.
 bool App::check_in_initialized_state(std::string_view func_name) {
@@ -174,7 +183,10 @@ void App::material(const ParamSet& ps) {
 void App::light_source(const ParamSet& ps) {
   check_in_world_block_state("App::light_source()");
   auto type = ps.retrieve<std::string>("type", "point");
-  auto I = ps.retrieve<RGBColor>("i", RGBColor{1.0f, 1.0f, 1.0f});
+  auto I = ps.retrieve<RGBColor>("i", RGBColor{-1.0f, -1.0f, -1.0f});
+  if (I.r < 0.0f) {
+    I = ps.retrieve<RGBColor>("l", RGBColor{1.0f, 1.0f, 1.0f});
+  }
   auto scale = ps.retrieve<Vector3f>("scale", Vector3f{1.0f, 1.0f, 1.0f});
   
   RGBColor final_I = RGBColor{I.r * scale.x, I.g * scale.y, I.b * scale.z};
@@ -277,15 +289,30 @@ void App::object(const ParamSet& ps) {
     }
   }
 
+  const Transform* o2w = nullptr;
+  const Transform* w2o = nullptr;
+  if (m_current_CTM != Transform()) {
+    o2w = get_cached_transform(m_current_CTM);
+    w2o = get_cached_transform(m_current_CTM.inverse());
+  }
+
   if (type == "sphere") {
-    Shape* shape = create_sphere(ps);
+    Shape* shape = create_sphere(ps, o2w, w2o);
     GeometricPrimitive* prim = new GeometricPrimitive(std::shared_ptr<Shape>(shape), mat);
-    m_render_options->primitives.push_back(std::shared_ptr<Primitive>(prim));
+    if (!m_current_instance_name.empty()) {
+      m_current_instance_primitives.push_back(std::shared_ptr<Primitive>(prim));
+    } else {
+      m_render_options->primitives.push_back(std::shared_ptr<Primitive>(prim));
+    }
   } else if (type == "trianglemesh") {
-    auto shapes = create_triangle_mesh_shape(ps);
+    auto shapes = create_triangle_mesh_shape(ps, o2w);
     for (auto& shape : shapes) {
       auto prim = std::make_shared<GeometricPrimitive>(shape, mat);
-      m_render_options->primitives.push_back(prim);
+      if (!m_current_instance_name.empty()) {
+        m_current_instance_primitives.push_back(prim);
+      } else {
+        m_render_options->primitives.push_back(prim);
+      }
     }
   }
 }
@@ -303,8 +330,146 @@ void App::world_begin(const ParamSet& ps) {
   check_in_setup_block_state("App::world_begin()");
   m_current_block_state = AppState::WorldBlock;  // correct machine state.
   hard_engine_reset();
+  
+  m_current_CTM = Transform();
+  while (!m_CTM_stack.empty()) m_CTM_stack.pop();
+  
+  m_current_GS = GraphicsState();
+  m_current_GS.current_material = m_render_options->current_material;
+  m_current_GS.named_materials = m_render_options->named_materials;
+  while (!m_GS_stack.empty()) m_GS_stack.pop();
+
+  m_saved_coord_systems.clear();
+  m_transform_cache.clear();
+  m_current_instance_name.clear();
+  m_current_instance_primitives.clear();
+  m_instances.clear();
 }
 
+void App::push_gs(const ParamSet& ps) {
+  check_in_world_block_state("App::push_gs()");
+  m_current_GS.current_material = m_render_options->current_material;
+  m_GS_stack.push(m_current_GS);
+  m_CTM_stack.push(m_current_CTM);
+}
+
+void App::pop_gs(const ParamSet& ps) {
+  check_in_world_block_state("App::pop_gs()");
+  if (!m_GS_stack.empty()) {
+    m_current_GS = m_GS_stack.top();
+    m_GS_stack.pop();
+    m_render_options->current_material = m_current_GS.current_material;
+  } else {
+    WARNING("pop_gs called with empty stack.");
+  }
+
+  if (!m_CTM_stack.empty()) {
+    m_current_CTM = m_CTM_stack.top();
+    m_CTM_stack.pop();
+  } else {
+    WARNING("pop_gs called with empty CTM stack.");
+  }
+}
+
+void App::push_ctm(const ParamSet& ps) {
+  check_in_world_block_state("App::push_ctm()");
+  m_CTM_stack.push(m_current_CTM);
+}
+
+void App::pop_ctm(const ParamSet& ps) {
+  check_in_world_block_state("App::pop_ctm()");
+  if (!m_CTM_stack.empty()) {
+    m_current_CTM = m_CTM_stack.top();
+    m_CTM_stack.pop();
+  } else {
+    WARNING("pop_ctm called with empty stack.");
+  }
+}
+
+void App::identity(const ParamSet& ps) {
+  check_in_world_block_state("App::identity()");
+  m_current_CTM = Transform();
+}
+
+void App::translate(const ParamSet& ps) {
+  check_in_world_block_state("App::translate()");
+  Vector3f v = ps.retrieve<Vector3f>("value", Vector3f(0,0,0));
+  m_current_CTM = m_current_CTM * ryt::translate(v);
+}
+
+void App::scale(const ParamSet& ps) {
+  check_in_world_block_state("App::scale()");
+  Vector3f v = ps.retrieve<Vector3f>("value", Vector3f(1,1,1));
+  m_current_CTM = m_current_CTM * ryt::scale(v.x, v.y, v.z);
+}
+
+void App::rotate(const ParamSet& ps) {
+  check_in_world_block_state("App::rotate()");
+  real_type angle = ps.retrieve<real_type>("angle", 0.0f);
+  Vector3f axis = ps.retrieve<Vector3f>("axis", Vector3f(0,1,0));
+  m_current_CTM = m_current_CTM * ryt::rotate(angle, axis);
+}
+
+void App::save_coord_system(const ParamSet& ps) {
+  check_in_world_block_state("App::save_coord_system()");
+  std::string name = ps.retrieve<std::string>("name", "");
+  if (!name.empty()) {
+    m_saved_coord_systems[name] = m_current_CTM;
+  }
+}
+
+void App::restore_coord_system(const ParamSet& ps) {
+  check_in_world_block_state("App::restore_coord_system()");
+  std::string name = ps.retrieve<std::string>("name", "");
+  if (m_saved_coord_systems.count(name) > 0) {
+    m_current_CTM = m_saved_coord_systems[name];
+  } else {
+    WARNING("restore_coord_system: Coordinate system not found: " + name);
+  }
+}
+
+const Transform* App::get_cached_transform(const Transform& t) {
+  for (const auto& ptr : m_transform_cache) {
+    if (*ptr == t) return ptr.get();
+  }
+  m_transform_cache.push_back(std::make_unique<Transform>(t));
+  return m_transform_cache.back().get();
+}
+
+void App::object_instance_begin(const ParamSet& ps) {
+  check_in_world_block_state("App::object_instance_begin()");
+  m_current_instance_name = ps.retrieve<std::string>("name", "");
+  m_current_instance_primitives.clear();
+}
+
+void App::object_instance_end(const ParamSet& ps) {
+  check_in_world_block_state("App::object_instance_end()");
+  if (!m_current_instance_name.empty()) {
+    auto aggregate = std::make_shared<BVHAccel>(std::move(m_current_instance_primitives));
+    m_instances[m_current_instance_name] = aggregate;
+    m_current_instance_name.clear();
+  }
+}
+
+void App::object_instance_call(const ParamSet& ps) {
+  check_in_world_block_state("App::object_instance_call()");
+  auto name = ps.retrieve<std::string>("name", "");
+  if (m_instances.count(name) > 0) {
+    std::shared_ptr<Primitive> instance_prim = m_instances[name];
+    if (m_current_CTM != Transform()) {
+      const Transform* o2w = get_cached_transform(m_current_CTM);
+      instance_prim = std::make_shared<TransformedPrimitive>(instance_prim, o2w);
+    }
+    
+    if (!m_current_instance_name.empty()) {
+      m_current_instance_primitives.push_back(instance_prim);
+    } else {
+      m_render_options->primitives.push_back(instance_prim);
+    }
+  } else {
+    WARNING("object_instance_call: Instance not found: " + name);
+  }
+}
 /// Erase temporary engine states so that we may render another scene with the same configuration.
 void App::hard_engine_reset() {
   if (m_render_options) {

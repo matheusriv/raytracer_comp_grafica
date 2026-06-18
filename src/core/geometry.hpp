@@ -597,7 +597,7 @@ Normal3<T> operator*(U f, const Normal3<T>& n) {
 
 template <typename T>
 Normal3<T> normalize(const Normal3<T>& n) {
-  return n / n.length();
+  return Normal3<T>(normalize(Vector3<T>(n)));
 }
 
 template <typename T>

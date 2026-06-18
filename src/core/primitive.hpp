@@ -9,6 +9,7 @@
 #include "material.hpp"
 #include "shape.hpp"
 #include "surfel.hpp"
+#include "transform.hpp"
 
 namespace ryt {
 
@@ -92,6 +93,20 @@ public:
 private:
   std::shared_ptr<Shape> shape;
   std::shared_ptr<Material> material;
+};
+
+class TransformedPrimitive : public Primitive {
+public:
+  TransformedPrimitive(std::shared_ptr<Primitive> primitive, const Transform* PrimitiveToWorld);
+
+  Bounds3f world_bounds() const override;
+  bool intersect(const Rayf& r, Surfel* sf) const override;
+  bool intersect_p(const Rayf& r) const override;
+  const Material* get_material() const override;
+
+private:
+  std::shared_ptr<Primitive> primitive;
+  const Transform* PrimitiveToWorld;
 };
 
 }  // namespace ryt

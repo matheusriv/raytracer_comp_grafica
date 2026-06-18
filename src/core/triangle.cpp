@@ -13,7 +13,7 @@ namespace ryt {
 
 Triangle::Triangle(std::shared_ptr<TriangleMesh> mesh, int tri_id,
                    bool backface_cull, bool flip_normals)
-    : Shape(flip_normals), v{ &mesh->vertex_indices[3 * tri_id] },
+    : Shape(nullptr, nullptr, flip_normals), v{ &mesh->vertex_indices[3 * tri_id] },
       n{ &mesh->normal_indices[3 * tri_id] },
       uv{ &mesh->uvcoord_indices[3 * tri_id] },
       mesh{ std::move(mesh) }, backface_cull{ backface_cull } {
@@ -141,7 +141,8 @@ static void compute_triangle_normals(TriangleMesh& mesh) {
 bool load_mesh_data(const std::string& filename,
                     bool reverse_order,
                     bool compute_normals_flag,
-                    std::shared_ptr<TriangleMesh> mesh) {
+                    std::shared_ptr<TriangleMesh> mesh,
+                    const Transform* o2w) {
   if (!mesh) return false;
 
   tinyobj::attrib_t attrib;
@@ -242,6 +243,15 @@ bool load_mesh_data(const std::string& filename,
     mesh->normal_indices.assign(mesh->n_triangles * 3, 0);
   }
 
+  if (o2w) {
+    for (auto& v : mesh->vertices) {
+      v = (*o2w)(v);
+    }
+    for (auto& n : mesh->normals) {
+      n = Normal3f(normalize(Vector3f((*o2w)(n))));
+    }
+  }
+
   if (reverse_order) {
     reverse_triangles(*mesh);
   }
@@ -260,7 +270,8 @@ bool load_mesh_data(const std::string& filename,
 static bool extract_triangle_mesh_data(const ParamSet& ps,
                                        bool reverse_order,
                                        bool compute_normals_flag,
-                                       std::shared_ptr<TriangleMesh> mesh) {
+                                       std::shared_ptr<TriangleMesh> mesh,
+                                       const Transform* o2w) {
   if (!mesh) return false;
 
   int ntriangles = ps.retrieve<int>("ntriangles", 0);
@@ -270,6 +281,9 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
   }
 
   auto indices = ps.retrieve<std::vector<int>>("vertex_indices", {});
+  if (indices.empty()) {
+    indices = ps.retrieve<std::vector<int>>("indices", {});
+  }
   auto vertices = ps.retrieve<std::vector<Point3f>>("vertices", {});
   auto normals = ps.retrieve<std::vector<Normal3f>>("normals", {});
   auto normal_indices = ps.retrieve<std::vector<int>>("normal_indices", {});
@@ -346,6 +360,15 @@ static bool extract_triangle_mesh_data(const ParamSet& ps,
     ensure_uvcoords(*mesh);
   }
 
+  if (o2w) {
+    for (auto& v : mesh->vertices) {
+      v = (*o2w)(v);
+    }
+    for (auto& n : mesh->normals) {
+      n = Normal3f(normalize(Vector3f((*o2w)(n))));
+    }
+  }
+
   if (reverse_order) {
     reverse_triangles(*mesh);
   }
@@ -369,7 +392,7 @@ std::vector<std::shared_ptr<Shape>> create_triangle_mesh(std::shared_ptr<Triangl
   return result;
 }
 
-std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps) {
+std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps, const Transform* o2w) {
   bool reverse_vertex_order = ps.retrieve<bool>("reverse_vertex_order", false);
   bool compute_normals_flag = ps.retrieve<bool>("compute_normals", false);
   bool backface_cull = ps.retrieve<bool>("backface_cull", true);
@@ -378,9 +401,9 @@ std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& p
   std::string filename = ps.retrieve<std::string>("filename", "");
   bool loaded = false;
   if (!filename.empty()) {
-    loaded = load_mesh_data(filename, reverse_vertex_order, compute_normals_flag, mesh);
+    loaded = load_mesh_data(filename, reverse_vertex_order, compute_normals_flag, mesh, o2w);
   } else {
-    loaded = extract_triangle_mesh_data(ps, reverse_vertex_order, compute_normals_flag, mesh);
+    loaded = extract_triangle_mesh_data(ps, reverse_vertex_order, compute_normals_flag, mesh, o2w);
   }
 
   if (!loaded) {

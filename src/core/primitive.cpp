@@ -226,4 +226,33 @@ void GeometricPrimitive::set_material(std::shared_ptr<Material> mat) {
   material = std::move(mat);
 }
 
+TransformedPrimitive::TransformedPrimitive(std::shared_ptr<Primitive> primitive, const Transform* PrimitiveToWorld)
+    : primitive(std::move(primitive)), PrimitiveToWorld(PrimitiveToWorld) {}
+
+Bounds3f TransformedPrimitive::world_bounds() const {
+  return (*PrimitiveToWorld)(primitive->world_bounds());
+}
+
+bool TransformedPrimitive::intersect(const Rayf& r, Surfel* sf) const {
+  Transform WorldToPrimitive = PrimitiveToWorld->inverse();
+  Rayf ray = WorldToPrimitive(r);
+  if (!primitive->intersect(ray, sf)) return false;
+  r.t_max = ray.t_max;
+  if (sf) {
+    sf->p = (*PrimitiveToWorld)(sf->p);
+    sf->n = Vector3f(normalize((*PrimitiveToWorld)(Normal3f(sf->n))));
+    sf->wo = -r.d;
+  }
+  return true;
+}
+
+bool TransformedPrimitive::intersect_p(const Rayf& r) const {
+  Transform WorldToPrimitive = PrimitiveToWorld->inverse();
+  return primitive->intersect_p(WorldToPrimitive(r));
+}
+
+const Material* TransformedPrimitive::get_material() const {
+  return primitive->get_material();
+}
+
 }  // namespace ryt

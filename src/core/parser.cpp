@@ -5,6 +5,7 @@
 #include <cassert>
 #include <sstream>
 #include <string>
+#include <algorithm>
 #include <vector>
 #include <string_view>
 #include <type_traits>
@@ -126,7 +127,9 @@ bool convert(const std::string& attr_name, const std::string& attr_content, ryt:
 template <typename T, std::uint8_t N>
 bool convert(const std::string& attr_name, const std::string& attr_content, ryt::ParamSet* ps) {
   assert(ps);
-  std::istringstream iss{ attr_content };
+  std::string clean_content = attr_content;
+  std::replace(clean_content.begin(), clean_content.end(), ',', ' ');
+  std::istringstream iss{ clean_content };
   std::vector<T> multiple_composite_values;
   T single_composite_value{};
   bool input_string_still_has_values{ true };
@@ -285,6 +288,14 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
     },
   },
   {
+    "accelerator",
+    {
+      "type",
+      "split_method",
+      "max_prims_per_node"
+    },
+  },
+  {
     "integrator",
     {
       "type",
@@ -311,6 +322,58 @@ std::unordered_map<std::string, std::vector<std::string>> tag_catalog{
       "filename",
     }
   },
+  {
+    "identity",
+    { "" },
+  },
+  {
+    "translate",
+    { "value" },
+  },
+  {
+    "scale",
+    { "value" },
+  },
+  {
+    "rotate",
+    { "angle", "axis" },
+  },
+  {
+    "save_coord_system",
+    { "name" },
+  },
+  {
+    "restore_coord_system",
+    { "name" },
+  },
+  {
+    "push_gs",
+    { "" },
+  },
+  {
+    "pop_gs",
+    { "" },
+  },
+  {
+    "push_ctm",
+    { "" },
+  },
+  {
+    "pop_ctm",
+    { "" },
+  },
+  {
+    "object_instance_begin",
+    { "name" },
+  },
+  {
+    "object_instance_end",
+    { "" },
+  },
+  {
+    "object_instance_call",
+    { "name" },
+  },
 };
 
 
@@ -327,8 +390,22 @@ std::unordered_map<std::string, std::function<void(const ryt::ParamSet&)>> api_f
   { "named_material", ryt::App::named_material },
   { "integrator", ryt::App::integrator },
   { "aggregator", ryt::App::aggregator },
+  { "accelerator", ryt::App::aggregator },
   { "object", ryt::App::object },
   { "light_source", ryt::App::light_source },
+  { "identity", ryt::App::identity },
+  { "translate", ryt::App::translate },
+  { "scale", ryt::App::scale },
+  { "rotate", ryt::App::rotate },
+  { "save_coord_system", ryt::App::save_coord_system },
+  { "restore_coord_system", ryt::App::restore_coord_system },
+  { "push_gs", ryt::App::push_gs },
+  { "pop_gs", ryt::App::pop_gs },
+  { "push_ctm", ryt::App::push_ctm },
+  { "pop_ctm", ryt::App::pop_ctm },
+  { "object_instance_begin", ryt::App::object_instance_begin },
+  { "object_instance_end", ryt::App::object_instance_end },
+  { "object_instance_call", ryt::App::object_instance_call },
 };
 
 
@@ -374,6 +451,7 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "filename", convert<std::string> },
   { "ntriangles", convert<int> },
   { "vertex_indices", convert<int> },
+  { "indices", convert<int> },
   { "vertices", convert<ryt::Point3f, 3> },
   { "normals", convert<ryt::Normal3f, 3> },
   { "normal_indices", convert<int> },
@@ -397,6 +475,10 @@ std::unordered_map<std::string, ConverterFunction> converters{
   { "silhouette_color", convert<ryt::RGBColor, 3> },
   { "silhouette_angle", convert<ryt::real_type> },
   { "color_map", convert<ryt::RGBColor, 3> },
+  // Transform attributes
+  { "value", convert<ryt::Vector3f, 3> },
+  { "angle", convert<ryt::real_type> },
+  { "axis", convert<ryt::Vector3f, 3> },
 };
 
 

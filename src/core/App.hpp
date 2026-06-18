@@ -5,6 +5,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <stack>
 
 #include "common.hpp"
 #include "paramset.hpp"
@@ -14,6 +15,7 @@
 #include "scene.hpp"
 #include "../integrators/integrator.hpp"
 #include "light.hpp"
+#include "transform.hpp"
 
 // Type of map we want to use.
 #define Dictionary std::unordered_map
@@ -22,6 +24,14 @@ namespace ryt {
   
 class Film;
 class Camera;
+
+
+struct GraphicsState {
+  std::shared_ptr<Material> current_material;
+  Dictionary<std::string, std::shared_ptr<Material>> named_materials;
+  bool flip_normals{false};
+  bool mats_lib_cloned{false};
+};
 
 struct RenderOptions {
   /// This is a map of attribute names (keys) and paramset (values).
@@ -100,13 +110,40 @@ public:
   static void world_end(const ParamSet& ps);
   static void film(const ParamSet& ps);
   static Camera* make_camera(const ParamSet& camera_ps, const ParamSet& film_ps);
+  static void identity(const ParamSet& ps);
+  static void translate(const ParamSet& ps);
+  static void scale(const ParamSet& ps);
+  static void rotate(const ParamSet& ps);
+  static void push_gs(const ParamSet& ps);
+  static void pop_gs(const ParamSet& ps);
+  static void push_ctm(const ParamSet& ps);
+  static void pop_ctm(const ParamSet& ps);
+  static void save_coord_system(const ParamSet& ps);
+  static void restore_coord_system(const ParamSet& ps);
+  static void object_instance_begin(const ParamSet& ps);
+  static void object_instance_end(const ParamSet& ps);
+  static void object_instance_call(const ParamSet& ps);
+  static const Transform* get_cached_transform(const Transform& t);
 
   /// Stores the running options passed to the main().
   static RunningOptions m_current_run_options;
   /// The infrastructure to render a scene (camera, integrator, etc.).
   static std::unique_ptr<RenderOptions> m_render_options;
-  /// Current API state
+    /// Current API state
   static AppState m_current_block_state;
+ 
+  static Transform m_current_CTM;
+  static std::stack<Transform> m_CTM_stack;
+ 
+  static GraphicsState m_current_GS;
+  static std::stack<GraphicsState> m_GS_stack;
+ 
+  static Dictionary<std::string, Transform> m_saved_coord_systems;
+  static std::vector<std::unique_ptr<Transform>> m_transform_cache;
+
+  static std::string m_current_instance_name;
+  static std::vector<std::shared_ptr<Primitive>> m_current_instance_primitives;
+  static Dictionary<std::string, std::shared_ptr<Primitive>> m_instances;
 };
 
 } //namespace

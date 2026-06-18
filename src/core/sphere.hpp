@@ -9,7 +9,7 @@ namespace ryt {
 /// Sphere primitive defined by a center point and a radius.
 class Sphere : public Shape {
 public:
-  Sphere(const Point3f& center, real_type radius, bool flip_n = false);
+  Sphere(const Point3f& center, real_type radius, bool flip_n = false, const Transform* o2w = nullptr, const Transform* w2o = nullptr);
 
   Bounds3f world_bounds() const override;
   bool intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const override;
@@ -20,7 +20,7 @@ private:
   real_type m_radius;
 };
 
-Sphere* create_sphere(const ParamSet& ps);
+Sphere* create_sphere(const ParamSet& ps, const Transform* o2w = nullptr, const Transform* w2o = nullptr);
 
 }  // namespace ryt
 

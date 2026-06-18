@@ -6,13 +6,14 @@
 
 namespace ryt {
 
-Sphere::Sphere(const Point3f& center, real_type radius, bool flip_n)
-    : Shape(flip_n), m_center{ center }, m_radius{ radius } {
+Sphere::Sphere(const Point3f& center, real_type radius, bool flip_n, const Transform* o2w, const Transform* w2o)
+    : Shape(o2w, w2o, flip_n), m_center{ center }, m_radius{ radius } {
 }
 
 Bounds3f Sphere::world_bounds() const {
-  return Bounds3f(m_center - Vector3f(m_radius, m_radius, m_radius),
+  Bounds3f b(m_center - Vector3f(m_radius, m_radius, m_radius),
                   m_center + Vector3f(m_radius, m_radius, m_radius));
+  return obj_to_world ? (*obj_to_world)(b) : b;
 }
 
 /// Solves the quadratic ray-sphere intersection equation.
@@ -42,31 +43,39 @@ static real_type solve_quadratic(const Rayf& r, const Point3f& center, real_type
 }
 
 bool Sphere::intersect(const Rayf& r, real_type* t_hit, Surfel* sf) const {
-  real_type t = solve_quadratic(r, m_center, m_radius);
+  Rayf ray = world_to_obj ? (*world_to_obj)(r) : r;
+  real_type t = solve_quadratic(ray, m_center, m_radius);
   if (t < 0.0f) return false;
 
   if (t_hit) *t_hit = t;
 
   if (sf != nullptr) {
-    sf->p         = r(t);
+    sf->p         = ray(t);
     sf->n         = normalize(sf->p - m_center);
     if (flip_normals) sf->n = sf->n * -1.0f;
-    sf->wo        = r.d * -1.0f;
+    sf->wo        = ray.d * -1.0f;
     sf->time      = t;
     sf->uv        = Point2f{ 0.0f, 0.0f };
+
+    if (obj_to_world) {
+      sf->p = (*obj_to_world)(sf->p);
+      sf->n = Vector3f(normalize((*obj_to_world)(Normal3f(sf->n))));
+      sf->wo = -r.d;
+    }
   }
   return true;
 }
 
 bool Sphere::intersect_p(const Rayf& r) const {
-  return solve_quadratic(r, m_center, m_radius) >= 0.0f;
+  Rayf ray = world_to_obj ? (*world_to_obj)(r) : r;
+  return solve_quadratic(ray, m_center, m_radius) >= 0.0f;
 }
 
-Sphere* create_sphere(const ParamSet& ps) {
+Sphere* create_sphere(const ParamSet& ps, const Transform* o2w, const Transform* w2o) {
   Point3f center = ps.retrieve<Point3f>("center", Point3f{ 0.0f, 0.0f, 0.0f });
   real_type radius = ps.retrieve<real_type>("radius", 1.0f);
   bool flip_n = ps.retrieve<bool>("flip_normals", false);
-  return new Sphere(center, radius, flip_n);
+  return new Sphere(center, radius, flip_n, o2w, w2o);
 }
 
 }  // namespace ryt

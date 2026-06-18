@@ -50,14 +50,15 @@ public:
   friend std::ostream& operator<<(std::ostream& os, const Triangle& t);
 };
 
-std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps);
+std::vector<std::shared_ptr<Shape>> create_triangle_mesh_shape(const ParamSet& ps, const Transform* o2w = nullptr);
 std::vector<std::shared_ptr<Shape>> create_triangle_mesh(std::shared_ptr<TriangleMesh> mesh,
                                                         bool backface_cull,
                                                         bool flip_normals);
 bool load_mesh_data(const std::string& filename,
                     bool reverse_order,
                     bool compute_normals,
-                    std::shared_ptr<TriangleMesh> mesh);
+                    std::shared_ptr<TriangleMesh> mesh,
+                    const Transform* o2w = nullptr);
 
 }  // namespace ryt
 
